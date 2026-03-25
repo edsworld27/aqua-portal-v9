@@ -2,10 +2,10 @@ import React from 'react';
 import { DashboardWidget } from './shared/DashboardWidget';
 import AIChatbot from './AIChatbot';
 import { SidebarItem } from './shared/SidebarItem';
-import { DesignConcepts } from './collaboration/DesignConcepts';
-import { ProjectTimeline } from './collaboration/ProjectTimeline';
-import { ProjectChat } from './collaboration/ProjectChat';
-import { SyncCard } from './collaboration/SyncCard';
+import { DesignConcepts } from './collaboration/DesignConcepts/index';
+import { ProjectTimeline } from './collaboration/ProjectTimeline/index';
+import { ProjectChat } from './collaboration/ProjectChat/index';
+import { SyncCard } from './collaboration/SyncCard/index';
 // Import other components here
 
 const componentMap: Record<string, React.FC<any>> = {
