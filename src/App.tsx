@@ -117,7 +117,7 @@ import { DashboardWidget } from './components/shared/DashboardWidget';
 import { InboxView } from './components/views/InboxView';
 import { AgencyClientsView } from './views/AgencyClientsView';
 import { AgencyConfiguratorView } from './views/AgencyConfiguratorView';
-import { RoleSwitcher } from './components/RoleSwitcher';
+import { RoleSwitcher } from './components/shared/RoleSwitcher';
 import { EditClientModal } from './components/modals/EditClientModal';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { AddRoleModal } from './components/modals/AddRoleModal';
