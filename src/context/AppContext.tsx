@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { AppUser, Client, AppTicket, Project, ProjectTask, LogEntry, PortalView, CustomSidebarLink, AgencyTemplate, Agency, CustomPage } from '../types';
+import { MasterConfig } from '../config/masterConfig';
 
 interface AppContextType {
   users: AppUser[];
@@ -42,6 +43,8 @@ interface AppContextType {
   activeAgencyId: string;
   customPages: CustomPage[];
   setCustomPages: React.Dispatch<React.SetStateAction<CustomPage[]>>;
+  masterConfig: MasterConfig;
+  setMasterConfig: React.Dispatch<React.SetStateAction<MasterConfig>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);

@@ -52,12 +52,12 @@ export const CustomPageView: React.FC<CustomPageViewProps> = ({ pageId }) => {
       key={page.id}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="p-10 max-w-6xl mx-auto w-full"
+      className="p-6 md:p-10 max-w-6xl mx-auto w-full"
     >
-      <div className="flex items-center justify-between mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
-          <h2 className="text-3xl font-semibold mb-2">{page.title}</h2>
-          <p className="text-slate-500">Custom dashboard view.</p>
+          <h2 className="text-2xl md:text-3xl font-semibold mb-2">{page.title}</h2>
+          <p className="text-sm md:text-base text-slate-500">Custom dashboard view.</p>
         </div>
       </div>
 

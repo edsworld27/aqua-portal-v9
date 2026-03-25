@@ -31,43 +31,43 @@ export function TaskDetailModal({
       />
       <motion.div 
         layoutId={selectedTask.id}
-        className="relative w-full max-w-2xl glass-card rounded-[2.5rem] p-10 overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-2xl glass-card rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 overflow-hidden max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${
+            <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
               selectedTask.status === 'Backlog' ? 'bg-slate-500' :
               selectedTask.status === 'In Progress' ? 'bg-indigo-500' :
               selectedTask.status === 'Review' ? 'bg-amber-500' : 'bg-emerald-500'
             }`} />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedTask.status}</span>
+            <span className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">{selectedTask.status}</span>
           </div>
           <button onClick={() => setSelectedTask(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <XCircle className="w-6 h-6 text-slate-500" />
+            <XCircle className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
           </button>
         </div>
 
-        <h2 className="text-3xl font-bold mb-4">{selectedTask.title}</h2>
-        <p className="text-slate-400 mb-10 leading-relaxed">{selectedTask.description}</p>
+        <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">{selectedTask.title}</h2>
+        <p className="text-sm md:text-base text-slate-400 mb-8 md:mb-10 leading-relaxed">{selectedTask.description}</p>
 
-        <div className="grid grid-cols-2 gap-6 mb-10">
-          <div className="space-y-4 p-6 bg-white/[0.02] rounded-3xl border border-white/5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assignee</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-10">
+          <div className="space-y-3 md:space-y-4 p-4 md:p-6 bg-white/[0.02] rounded-2xl md:rounded-3xl border border-white/5">
+            <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assignee</div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm md:text-base">
                 {users.find(u => u.id === selectedTask.assigneeId)?.avatar}
               </div>
               <div>
-                <div className="font-semibold">{users.find(u => u.id === selectedTask.assigneeId)?.name}</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest">{users.find(u => u.id === selectedTask.assigneeId)?.role}</div>
+                <div className="font-semibold text-sm md:text-base">{users.find(u => u.id === selectedTask.assigneeId)?.name}</div>
+                <div className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-widest">{users.find(u => u.id === selectedTask.assigneeId)?.role}</div>
               </div>
             </div>
           </div>
-          <div className="space-y-4 p-6 bg-white/[0.02] rounded-3xl border border-white/5">
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Timeline</div>
+          <div className="space-y-3 md:space-y-4 p-4 md:p-6 bg-white/[0.02] rounded-2xl md:rounded-3xl border border-white/5">
+            <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">Timeline</div>
             <div className="flex items-center gap-3 text-slate-300">
-              <Calendar className="w-5 h-5 text-indigo-400" />
-              <span className="font-medium">{selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Due Date'}</span>
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-indigo-400" />
+              <span className="font-medium text-sm md:text-base">{selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Due Date'}</span>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@ export function TaskDetailModal({
 
         <div className="space-y-6">
           <h3 className="text-lg font-semibold">Attachments</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
             {selectedTask.attachments.map((att: any) => (
               <a
                 key={att.id}

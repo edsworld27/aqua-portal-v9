@@ -55,11 +55,11 @@ export function GlobalTasksModal({ isOpen, onClose }: GlobalTasksModalProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col"
+          className="relative w-full sm:max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20 shrink-0">
-            <h2 className="text-xl font-semibold text-white">Tasks</h2>
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/20 shrink-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">Tasks</h2>
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
@@ -91,11 +91,11 @@ export function GlobalTasksModal({ isOpen, onClose }: GlobalTasksModalProps) {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             {activeTab === 'personal' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Personal Todos</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center mb-2 sm:mb-4">
+                  <h3 className="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Personal Todos</h3>
                   <button 
                     onClick={() => {
                       const text = prompt('Task description:');
@@ -107,8 +107,8 @@ export function GlobalTasksModal({ isOpen, onClose }: GlobalTasksModalProps) {
                   </button>
                 </div>
                 {todos.map((todo, index) => (
-                  <div key={todo.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/10 group">
-                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div key={todo.id} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/5 rounded-xl border border-white/10 group">
+                    <div className="flex flex-col gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => handleMoveTodo(index, 'up')} disabled={index === 0} className="p-0.5 hover:bg-white/10 rounded text-slate-400 disabled:opacity-30">
                         <ChevronUp className="w-3 h-3" />
                       </button>
@@ -141,11 +141,11 @@ export function GlobalTasksModal({ isOpen, onClose }: GlobalTasksModalProps) {
                       ) : (
                         <p className={`text-sm truncate ${todo.completed ? 'text-slate-500 line-through' : 'text-white'}`}>{todo.text}</p>
                       )}
-                      <div className="flex gap-2 mt-2">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${todo.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-500/20 text-slate-400'}`}>{todo.priority}</span>
+                      <div className="flex gap-2 mt-1.5 sm:mt-2">
+                        <span className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full ${todo.priority === 'High' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-500/20 text-slate-400'}`}>{todo.priority}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => {
                           setEditingTodoId(todo.id);
@@ -168,15 +168,15 @@ export function GlobalTasksModal({ isOpen, onClose }: GlobalTasksModalProps) {
             )}
 
             {activeTab === 'project' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Project Tasks</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex justify-between items-center mb-2 sm:mb-4">
+                  <h3 className="text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wider">Project Tasks</h3>
                 </div>
                 {projectTasks.map(task => (
-                  <div key={task.id} className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-sm font-medium text-white">{task.title}</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  <div key={task.id} className="p-2.5 sm:p-3 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex justify-between items-start mb-1.5 sm:mb-2">
+                      <p className="text-sm font-medium text-white truncate pr-2">{task.title}</p>
+                      <span className={`text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
                         task.status === 'Done' ? 'bg-emerald-500/20 text-emerald-400' :
                         task.status === 'In Progress' ? 'bg-indigo-500/20 text-indigo-400' :
                         'bg-slate-500/20 text-slate-400'

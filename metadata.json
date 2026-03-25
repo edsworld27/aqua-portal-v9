@@ -1,5 +1,5 @@
 {
-  "name": "",
-  "description": "",
-  "requestFramePermissions": []
+  "name": "Aqua CRM",
+  "description": "A CRM for managing clients and team projects.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
 }

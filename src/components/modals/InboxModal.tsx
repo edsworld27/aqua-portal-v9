@@ -28,11 +28,11 @@ export function InboxModal({ isOpen, onClose }: InboxModalProps) {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col"
+          className="relative w-full sm:max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20 shrink-0">
-            <h2 className="text-xl font-semibold text-white">Inbox</h2>
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/20 shrink-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">Inbox</h2>
             <button
               onClick={onClose}
               className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
@@ -64,31 +64,31 @@ export function InboxModal({ isOpen, onClose }: InboxModalProps) {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             {activeTab === 'notifications' && (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50">
-                <Bell className="w-12 h-12 text-slate-400" />
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-3 sm:space-y-4 opacity-50">
+                <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-slate-400" />
                 <div>
-                  <h3 className="text-lg font-medium text-white">No new notifications</h3>
-                  <p className="text-sm text-slate-400">You're all caught up!</p>
+                  <h3 className="text-base sm:text-lg font-medium text-white">No new notifications</h3>
+                  <p className="text-xs sm:text-sm text-slate-400">You're all caught up!</p>
                 </div>
               </div>
             )}
 
             {activeTab === 'updates' && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {[
                   { title: 'AI Integration', date: 'Q2 2026', desc: 'Advanced AI capabilities for the website editor.' },
                   { title: 'Mobile App', date: 'Q3 2026', desc: 'Native iOS and Android portal apps.' },
                   { title: 'Advanced Analytics', date: 'Q4 2026', desc: 'Deep dive into your user behavior and metrics.' }
                 ].map((update, i) => (
-                  <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10 group hover:border-indigo-500/50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-white">{update.title}</h3>
-                      <span className="text-[10px] px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-full font-bold uppercase tracking-widest">{update.date}</span>
+                  <div key={i} className="p-3 sm:p-4 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 group hover:border-indigo-500/50 transition-colors">
+                    <div className="flex justify-between items-start mb-1.5 sm:mb-2">
+                      <h3 className="text-sm sm:text-base font-medium text-white">{update.title}</h3>
+                      <span className="text-[9px] sm:text-[10px] px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-full font-bold uppercase tracking-widest shrink-0">{update.date}</span>
                     </div>
-                    <p className="text-sm text-slate-400 mb-4">{update.desc}</p>
-                    <button className="text-xs text-indigo-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <p className="text-xs sm:text-sm text-slate-400 mb-3 sm:mb-4">{update.desc}</p>
+                    <button className="text-[10px] sm:text-xs text-indigo-400 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
                       Read More <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>

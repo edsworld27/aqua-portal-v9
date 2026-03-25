@@ -80,8 +80,11 @@ import {
   CheckSquare,
   LayoutGrid,
   Terminal,
-  UserCheck
+  UserCheck,
+  X,
+  Menu
 } from 'lucide-react';
+import { getSidebarItems } from './config/sidebar';
 
 import {
   Step,
@@ -105,9 +108,17 @@ import {
   CustomPage
 } from './types';
 
+import { MasterConfig, initialMasterConfig } from './config/masterConfig';
 import { AppProvider } from './context/AppContext';
+import { InboxProvider } from './context/InboxContext';
+import { useModalContext } from './context/ModalContext';
 import { SidebarItem } from './components/SidebarItem';
 import { DashboardWidget } from './components/DashboardWidget';
+import { InboxView } from './components/views/InboxView';
+import { AgencyClientsView } from './views/AgencyClientsView';
+import { AgencyConfiguratorView } from './views/AgencyConfiguratorView';
+import { RoleSwitcher } from './components/RoleSwitcher';
+import { EditClientModal } from './components/modals/EditClientModal';
 import { AddClientModal } from './components/modals/AddClientModal';
 import { AddRoleModal } from './components/modals/AddRoleModal';
 import { AddUserModal } from './components/modals/AddUserModal';
@@ -127,8 +138,15 @@ import CollaborationView from './components/views/CollaborationView';
 import { AgencyBuilderView } from './components/views/AgencyBuilderView';
 import { CustomPageView } from './components/views/CustomPageView';
 import { EmployeeManagementView } from './components/views/EmployeeManagementView';
+import { EmployeeProfileModal } from './components/modals/EmployeeProfileModal';
+import { EmployeeManagementModal } from './components/modals/EmployeeManagementModal';
+import { PlanModal } from './components/modals/PlanModal';
+import { AgencyCommunicateModal } from './components/modals/AgencyCommunicateModal';
+import { SupportTicketsModal } from './components/modals/SupportTicketsModal';
 import { SettingsModal } from './components/modals/SettingsModal';
+import { ConfirmationModal } from './components/modals/ConfirmationModal';
 import { GlobalTasksModal } from './components/modals/GlobalTasksModal';
+import { GlobalSettingsView } from './views/GlobalSettingsView';
 import { InboxModal } from './components/modals/InboxModal';
 import { AppLauncherModal } from './components/modals/AppLauncherModal';
 
@@ -137,7 +155,22 @@ export const iconMap: Record<string, any> = {
 };
 
 export default function App() {
-  const [step, setStep] = useState<Step>('setup');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const [step, setStep] = useState<Step>('login');
   const [portalView, setPortalView] = useState<PortalView | string>('dashboard');
   const [todos, setTodos] = useState<Todo[]>([
     { id: '1', text: 'Review Q1 performance reports', completed: false, priority: 'High', category: 'Strategic' },
@@ -156,11 +189,10 @@ export default function App() {
     avatar: 'EH'
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const { showPlanModal, setShowPlanModal, showAgencyCommunicateModal, setShowAgencyCommunicateModal, showSupportTicketsModal, setShowSupportTicketsModal, showNewProjectModal, setShowNewProjectModal, showNewTaskModal, setShowNewTaskModal, showAddUserModal, setShowAddUserModal, showSettingsModal, setShowSettingsModal, showGlobalTasksModal, setShowGlobalTasksModal, showInboxModal, setShowInboxModal, showAppLauncherModal, setShowAppLauncherModal, showTicketModal, setShowTicketModal, showMobileMenu, setShowMobileMenu, showAddClientModal, setShowAddClientModal, showEditClientModal, setShowEditClientModal, showConfirmationModal, setShowConfirmationModal, showAddRoleModal, setShowAddRoleModal, showEmployeeProfileModal, setShowEmployeeProfileModal, showEmployeeManagementModal, setShowEmployeeManagementModal } = useModalContext();
+  const [editingClient, setEditingClient] = useState<any>(null);
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
   const [users, setUsers] = useState<AppUser[]>([
-    { id: 1, name: 'Edward Hallam', email: 'edwardhallam07@gmail.com', role: 'Founder', permissions: ['dashboard', 'admin-dashboard', 'client-management', 'settings', 'logs', 'employee-management', 'agency-communicate', 'support-tickets', 'ai-sessions', 'employee-profile', 'agency-clients', 'project-hub', 'task-board'], avatar: 'EH', workingHours: '9:00 AM - 6:00 PM', bio: 'Founder & CEO', joinedDate: '2025-01-01' },
     { id: 2, name: 'John Manager', email: 'john@example.com', role: 'AgencyManager', permissions: ['dashboard', 'admin-dashboard', 'client-management', 'logs', 'agency-communicate', 'support-tickets', 'employee-profile', 'project-hub', 'task-board'], avatar: 'JM', workingHours: '9:00 AM - 5:00 PM', bio: 'Operations Manager', joinedDate: '2025-02-15' },
     { id: 3, name: 'Sarah Employee', email: 'sarah@example.com', role: 'AgencyEmployee', permissions: ['dashboard', 'client-management', 'agency-communicate', 'employee-profile', 'project-hub', 'task-board'], avatar: 'SE', workingHours: '10:00 AM - 4:00 PM', bio: 'Design Lead', joinedDate: '2025-03-10' },
     { id: 4, name: 'Client Owner', email: 'contact@acme.com', role: 'ClientOwner', permissions: ['dashboard', 'onboarding', 'support', 'logs', 'employee-profile'], clientId: 'client-1', avatar: 'CO', workingHours: '8:00 AM - 4:00 PM', bio: 'CEO at Acme Corp', joinedDate: '2026-01-20' },
@@ -216,18 +248,18 @@ export default function App() {
     { id: '2', timestamp: new Date().toISOString(), userId: 1, userName: 'Founder', action: 'Portal Access', details: 'Accessed Agency Hub', type: 'action' },
     { id: '3', timestamp: new Date().toISOString(), userId: 2, userName: 'John Manager', action: 'Update', details: 'Updated client priority', type: 'action' },
   ]);
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showGlobalTasksModal, setShowGlobalTasksModal] = useState(false);
-  const [showInboxModal, setShowInboxModal] = useState(false);
-  const [showAppLauncherModal, setShowAppLauncherModal] = useState(false);
-  const [showTicketModal, setShowTicketModal] = useState(false);
   const [newTicket, setNewTicket] = useState({ title: '', priority: 'Medium' as const, type: 'internal' as const });
-  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [confirmationConfig, setConfirmationConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type?: 'danger' | 'warning' | 'info';
+  }>({ title: '', message: '', onConfirm: () => {} });
   const [newUser, setNewUser] = useState<Omit<AppUser, 'id'>>({
     name: '',
     email: '',
     role: 'AgencyEmployee',
+    customRoleId: undefined,
     permissions: ['dashboard'] as PortalView[],
     avatar: '',
     clientId: undefined
@@ -261,6 +293,7 @@ export default function App() {
   const [appTheme, setAppTheme] = useState('indigo');
   const [customSidebarLinks, setCustomSidebarLinks] = useState<CustomSidebarLink[]>([]);
   const [customPages, setCustomPages] = useState<CustomPage[]>([]);
+  const [masterConfig, setMasterConfig] = useState<MasterConfig>(initialMasterConfig);
   const [activeTemplate, setActiveTemplate] = useState<AgencyTemplate | null>(null);
   const [appLogo, setAppLogo] = useState<string | null>(null);
   const [loginPortalType, setLoginPortalType] = useState<'standard' | 'branded'>('standard');
@@ -286,7 +319,6 @@ export default function App() {
     logo: null as string | null,
     primaryColor: '#6366f1'
   });
-  const [showAddRoleModal, setShowAddRoleModal] = useState(false);
   const [newRoleForm, setNewRoleForm] = useState<Omit<CustomRole, 'id'>>({
     name: '',
     permissions: []
@@ -422,6 +454,21 @@ export default function App() {
     }
   };
 
+  const handleUpdateClientStage = (clientId: string, stage: ClientStage) => {
+    setClients(clients.map(c => c.id === clientId ? { ...c, stage } : c));
+    addLog('Client', `Updated client stage to ${stage}`, 'action');
+  };
+
+  const handleEditClient = (client: any) => {
+    setEditingClient(client);
+    setShowEditClientModal(true);
+  };
+
+  const handleSaveClient = (updatedClient: any) => {
+    setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+    addLog('Client', `Updated client ${updatedClient.name}`, 'action');
+  };
+
   const handleImpersonate = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     addLog('Impersonation', `Started impersonating ${client?.name}`, 'impersonation', clientId);
@@ -434,10 +481,6 @@ export default function App() {
     setImpersonatingClientId(null);
     setImpersonatedUserEmail(null);
     setPortalView('operations-hub');
-  };
-
-  const handleUpdateClientStage = (clientId: string, stage: ClientStage) => {
-    setClients(prev => prev.map(c => c.id === clientId ? { ...c, stage } : c));
   };
 
   const handleAddClient = () => {
@@ -505,7 +548,7 @@ export default function App() {
       const user: AppUser = {
         ...newUser,
         id: Date.now(),
-        avatar: newUser.name.split(' ').map(n => n[0]).join('')
+        avatar: (newUser.name || '').split(' ').map(n => n[0]).join('')
       };
       setUsers(prev => [...prev, user]);
       addLog('User Created', `New user ${user.name} added with role ${user.role}`, 'action');
@@ -517,6 +560,7 @@ export default function App() {
       name: '',
       email: '',
       role: 'AgencyEmployee',
+      customRoleId: undefined,
       permissions: ['dashboard'],
       avatar: '',
       clientId: undefined
@@ -530,8 +574,35 @@ export default function App() {
       alert('Cannot delete the Founder account.');
       return;
     }
-    setUsers(prev => prev.filter(u => u.id !== id));
-    addLog('User Deleted', `User ${user.name} removed from the system`, 'action');
+
+    setConfirmationConfig({
+      title: 'Delete User',
+      message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+      onConfirm: () => {
+        setUsers(prev => prev.filter(u => u.id !== id));
+        addLog('User Deleted', `User ${user.name} removed from the system`, 'action');
+      }
+    });
+    setShowConfirmationModal(true);
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+    const role = currentAgency?.roles.find(r => r.id === roleId);
+    if (!role) return;
+
+    setConfirmationConfig({
+      title: 'Delete Role',
+      message: `Are you sure you want to delete the "${role.name}" role? Users assigned to this role will lose their custom permissions.`,
+      onConfirm: () => {
+        setAgencies(prev => prev.map(a => 
+          a.id === activeAgencyId ? { ...a, roles: a.roles.filter(r => r.id !== roleId) } : a
+        ));
+        // Reset users with this role
+        setUsers(prev => prev.map(u => u.customRoleId === roleId ? { ...u, customRoleId: undefined } : u));
+        addLog('Role Deleted', `Role "${role.name}" was removed`, 'action');
+      }
+    });
+    setShowConfirmationModal(true);
   };
 
   const handleCreateRole = () => {
@@ -662,7 +733,26 @@ export default function App() {
   };
 
   const handleViewChange = (view: PortalView | string) => {
+    if (view === 'your-plan') {
+      setShowPlanModal(true);
+      return;
+    }
+    if (view === 'inbox') {
+      setPortalView('inbox');
+      setShowMobileMenu(false);
+      return;
+    }
+    if (view === 'support-tickets') {
+      setShowSupportTicketsModal(true);
+      return;
+    }
+    if (view === 'agency-configurator') {
+      setPortalView('agency-configurator');
+      setShowMobileMenu(false);
+      return;
+    }
     setPortalView(view);
+    setShowMobileMenu(false);
     if (view === 'website') {
       setSidebarCollapsed(true);
     } else {
@@ -738,11 +828,14 @@ export default function App() {
     currentAgency,
     activeAgencyId,
     customPages,
-    setCustomPages
+    setCustomPages,
+    masterConfig,
+    setMasterConfig
   };
 
   return (
-    <AppProvider value={appContextValue}>
+    <InboxProvider>
+      <AppProvider value={appContextValue}>
       <div className={`relative flex min-h-screen overflow-hidden transition-colors duration-1000 ${step === 'portal' ? 'bg-black' : 'bg-[#0f172a]'}`}>
       {/* Background Orbs */}
       {step !== 'portal' && (
@@ -767,374 +860,75 @@ export default function App() {
       )}
 
       <AnimatePresence mode="wait">
-        {step === 'setup' && (
-          <motion.div
-            key="setup"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex items-center justify-center w-full min-h-screen relative z-[100] px-6"
-          >
+        {step === 'login' && (
+          <div className="flex items-center justify-center w-full min-h-screen relative z-[100] px-6">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)]" />
-            
-            {/* Animated Background Stars */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(20)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-white rounded-full"
-                  initial={{ 
-                    x: Math.random() * 1200, 
-                    y: Math.random() * 800,
-                    opacity: Math.random() * 0.5 
-                  }}
-                  animate={{ 
-                    opacity: [0.2, 0.8, 0.2],
-                    scale: [1, 1.5, 1]
-                  }}
-                  transition={{ 
-                    duration: 3 + Math.random() * 4, 
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
-            </div>
-
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative w-full max-w-4xl glass-card rounded-[2.5rem] p-12 overflow-hidden shadow-2xl border border-white/10"
+              className="relative w-full max-w-md glass-card rounded-[2.5rem] p-10 shadow-2xl border border-white/10 text-center"
             >
-              <div className="flex flex-col h-full max-h-[85vh]">
-                <div className="flex items-center justify-between mb-12">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-                      <Sparkles className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl font-bold tracking-tight">Agency Configuration</h1>
-                      <p className="text-slate-500 text-sm font-medium">Step {setupStep} of 3</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setStep('login');
-                      addLog('Setup Bypassed', 'User skipped initial agency configuration', 'system');
-                    }}
-                    className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-400 transition-all border border-white/10 flex items-center gap-2 group"
-                  >
-                    Skip to Login
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-                  <AnimatePresence mode="wait">
-                    {setupStep === 1 && (
-                      <motion.div
-                        key="step1"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-8"
-                      >
-                        <div>
-                          <h2 className="text-4xl font-bold mb-3 tracking-tight">Identity & Spirit</h2>
-                          <p className="text-slate-400 text-lg">Let's give your agency a name and a face. This will be visible to your clients and team.</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                          <div className="space-y-4">
-                            <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Agency Name</label>
-                            <div className="relative group">
-                              <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
-                              <input 
-                                type="text"
-                                placeholder="e.g. Acme Digital HQ"
-                                value={newAgencyForm.name}
-                                onChange={(e) => setNewAgencyForm({...newAgencyForm, name: e.target.value})}
-                                className="w-full pl-12 pr-4 py-5 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-all text-white text-xl font-semibold shadow-inner"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Primary Brand Color</label>
-                            <div className="flex flex-wrap items-center gap-4 p-5 bg-white/5 border border-white/10 rounded-2xl">
-                              {['#6366f1', '#06b6d4', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6'].map(color => (
-                                <button
-                                  key={color}
-                                  onClick={() => setNewAgencyForm({...newAgencyForm, primaryColor: color})}
-                                  className={`w-10 h-10 rounded-full border-2 transition-all ${
-                                    newAgencyForm.primaryColor === color ? 'border-white scale-125 shadow-[0_0_15px_rgba(255,255,255,0.3)] z-10' : 'border-transparent opacity-40 hover:opacity-100'
-                                  }`}
-                                  style={{ backgroundColor: color }}
-                                />
-                              ))}
-                              <div className="w-px h-8 bg-white/10 mx-2" />
-                              <input 
-                                type="color"
-                                value={newAgencyForm.primaryColor}
-                                onChange={(e) => setNewAgencyForm({...newAgencyForm, primaryColor: e.target.value})}
-                                className="w-10 h-10 rounded-full bg-transparent border-none cursor-pointer p-0 overflow-hidden"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Agency Logo (Optional)</label>
-                          <div className="h-56 border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center bg-white/5 hover:bg-white/10 transition-all group cursor-pointer border-spacing-4">
-                            <div className="w-20 h-20 rounded-3xl bg-indigo-500/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform group-hover:bg-indigo-500/20 shadow-lg shadow-indigo-500/5">
-                              <Upload className="w-10 h-10 text-indigo-400" />
-                            </div>
-                            <p className="text-lg font-semibold text-slate-300">Drag and drop or click to upload</p>
-                            <p className="text-sm text-slate-500 mt-1">PNG, SVG or WEBP up to 5MB</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {setupStep === 2 && (
-                      <motion.div
-                        key="step2"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-8"
-                      >
-                        <div>
-                          <h2 className="text-4xl font-bold mb-3 tracking-tight">Define Core roles</h2>
-                          <p className="text-slate-400 text-lg">Initialize your foundational team structure. You can customize these and add more in Settings.</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-5">
-                          {[
-                            { id: 'Founder', name: 'Master Founder', desc: 'Full root access to agency metrics, global settings, and audit logs.', icon: ShieldCheck, color: 'text-indigo-400' },
-                            { id: 'AgencyManager', name: 'Operations Lead', desc: 'Manages projects, task boards, and client relations. Restricted global settings.', icon: Star, color: 'text-amber-400' },
-                            { id: 'AgencyEmployee', name: 'Agency Operator', desc: 'Focus on daily execution, project tasks, and internal communication.', icon: User, color: 'text-emerald-400' }
-                          ].map(role => (
-                            <div key={role.id} className="p-8 glass-card border border-white/5 rounded-[2rem] flex items-center justify-between group hover:bg-white/5 hover:border-white/10 transition-all">
-                              <div className="flex items-center gap-6">
-                                <div className="w-16 h-16 rounded-[1.25rem] bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
-                                  <role.icon className={`w-8 h-8 ${role.color}`} />
-                                </div>
-                                <div>
-                                  <h3 className="font-bold text-xl mb-1">{role.name}</h3>
-                                  <p className="text-slate-500 max-w-md">{role.desc}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="px-4 py-1.5 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-slate-400 rounded-full border border-white/10">Default</span>
-                                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                  <CheckSquare className="w-5 h-5 text-emerald-400" />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                          <button className="p-8 border-2 border-dashed border-white/10 rounded-[2rem] flex items-center justify-center gap-3 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all font-bold text-lg group italic">
-                            <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-                            Create Custom Role Configuration
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {setupStep === 3 && (
-                      <motion.div
-                        key="step3"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-10"
-                      >
-                        <div className="text-center py-6">
-                          <div className="w-28 h-28 rounded-[2.5rem] bg-indigo-600 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-indigo-600/40 relative">
-                             <Sparkles className="w-14 h-14 text-white" />
-                             <motion.div 
-                               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
-                               transition={{ duration: 2, repeat: Infinity }}
-                               className="absolute inset-0 bg-indigo-400 rounded-[2.5rem] blur-xl -z-10" 
-                             />
-                          </div>
-                          <h2 className="text-5xl font-bold mb-4 tracking-tighter">Infrastructure Ready.</h2>
-                          <p className="text-slate-400 text-xl max-w-lg mx-auto leading-relaxed">Your professional environment has been provisioned. Welcome to the command center of your agency.</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                           <div className="glass-card p-8 rounded-[2rem] border border-white/5 space-y-4">
-                            <div className="flex items-center justify-between py-3 border-b border-white/5">
-                              <span className="text-slate-500 font-medium">Agency Name</span>
-                              <span className="font-bold text-lg">{newAgencyForm.name || 'Universal Agency'}</span>
-                            </div>
-                            <div className="flex items-center justify-between py-3 border-b border-white/5">
-                              <span className="text-slate-500 font-medium">Instance ID</span>
-                              <span className="font-bold text-indigo-400 font-mono tracking-wider uppercase">AQ-{Math.floor(1000 + Math.random() * 9000)}-HQ</span>
-                            </div>
-                            <div className="flex items-center justify-between py-3">
-                              <span className="text-slate-500 font-medium">Branding Type</span>
-                              <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full shadow-lg" style={{ backgroundColor: newAgencyForm.primaryColor }} />
-                                <span className="font-bold text-slate-300">Custom</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="glass-card p-8 rounded-[2rem] border border-white/5 flex flex-col justify-center gap-4 bg-indigo-600/5">
-                            <div className="flex items-center gap-4 italic text-slate-400">
-                              <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                              <p className="text-sm">Root access will be granted to the initial Founder account created during login.</p>
-                            </div>
-                            <div className="flex items-center gap-4 italic text-slate-400">
-                              <LayoutGrid className="w-5 h-5 text-indigo-400" />
-                              <p className="text-sm">Default operational dashboards (Project Hub, Task Board) have been pre-installed.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="mt-12 flex gap-5">
-                  {setupStep > 1 && (
-                    <button 
-                      onClick={() => setSetupStep(setupStep - 1)}
-                      className="px-10 py-5 bg-white/5 hover:bg-white/10 rounded-2xl font-bold text-slate-400 transition-all flex items-center gap-3 border border-white/5 active:scale-95"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                      Back
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => {
-                      if (setupStep < 3) {
-                        setSetupStep(setupStep + 1);
-                      } else {
-                        handleAgencySetup();
-                      }
-                    }}
-                    disabled={setupStep === 1 && !newAgencyForm.name}
-                    className={`flex-1 py-5 font-bold rounded-2xl transition-all shadow-2xl flex items-center justify-center gap-3 text-lg relative overflow-hidden group ${
-                      setupStep === 1 && !newAgencyForm.name 
-                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30 active:scale-[0.98]'
-                    }`}
-                  >
-                    <span className="relative z-10">{setupStep === 3 ? 'Deploy Agency Environment' : 'Continue'}</span>
-                    {setupStep < 3 && <ChevronRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" />}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                      initial={{ x: '-100%' }}
-                      whileHover={{ x: '100%' }}
-                      transition={{ duration: 0.6 }}
-                    />
-                  </button>
-                </div>
+              <h1 className="text-3xl font-bold mb-8">Aqua CRM</h1>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => {
+                    setUserProfile({ name: 'Founder', email: 'edwardhallam07@gmail.com', avatar: 'FO', role: 'Founder' });
+                    setStep('portal');
+                  }}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold transition-all text-sm"
+                >
+                  Login as Founder
+                </button>
+                <button 
+                  onClick={() => {
+                    setUserProfile({ name: 'Client', email: 'contact@acme.com', avatar: 'CL', role: 'ClientOwner' });
+                    setStep('portal');
+                  }}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold transition-all text-sm"
+                >
+                  Login as Client
+                </button>
+                <button 
+                  onClick={() => {
+                    setUserProfile({ name: 'Operator', email: 'operator@example.com', avatar: 'OP', role: 'AgencyManager' });
+                    setStep('portal');
+                  }}
+                  className="w-full py-3 bg-amber-600 hover:bg-amber-500 rounded-xl font-bold transition-all text-sm"
+                >
+                  Login as Operator
+                </button>
+                <button 
+                  onClick={() => {
+                    setUserProfile({ name: 'Employee', email: 'sarah@example.com', avatar: 'EM', role: 'AgencyEmployee' });
+                    setStep('portal');
+                  }}
+                  className="w-full py-3 bg-rose-600 hover:bg-rose-500 rounded-xl font-bold transition-all text-sm"
+                >
+                  Login as Employee
+                </button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {step === 'login' && (
-          <div className="flex items-center justify-center w-full">
-            <motion.div
-              key="login"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-card w-full max-w-md p-10 rounded-[32px] shadow-2xl z-10"
-            >
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/20 mb-6">
-                  <User className="w-8 h-8 text-indigo-400" />
-                </div>
-                <h2 className="text-3xl font-semibold tracking-tight mb-2">Welcome Back</h2>
-                <p className="text-slate-400">Enter your credentials to access the portal.</p>
-              </div>
-
-              <form onSubmit={handleLoginSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Username</label>
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <input
-                      type="text"
-                      required
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="admin@premium.com"
-                      className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-12 pr-4 py-4 bg-black/20 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <button
-                    type="submit"
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 group"
-                  >
-                    Continue
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserProfile({
-                        name: 'Edward Hallam',
-                        email: 'edwardhallam07@gmail.com',
-                        avatar: 'EH'
-                      });
-                      setStep('portal');
-                      setPortalView('dashboard');
-                      addLog('Dev Bypass', 'Founder bypassed login via Dev button', 'system');
-                    }}
-                    className="w-full py-3 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white font-medium rounded-xl border border-white/5 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Terminal className="w-4 h-4" />
-                    Dev Bypass
-                  </button>
-                </div>
-              </form>
             </motion.div>
           </div>
         )}
 
         {step === 'security' && (
-          <div className="flex items-center justify-center w-full">
+          <div className="flex items-center justify-center w-full p-4">
             <motion.div
               key="security"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-card w-full max-w-md p-10 rounded-[32px] shadow-2xl z-10"
+              className="glass-card w-full max-w-md p-6 md:p-10 rounded-2xl md:rounded-[32px] shadow-2xl z-10"
             >
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/20 mb-6">
-                  <ShieldCheck className="w-8 h-8 text-indigo-400" />
+              <div className="text-center mb-8 md:mb-10">
+                <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-indigo-500/20 mb-4 md:mb-6">
+                  <ShieldCheck className="w-7 h-7 md:w-8 md:h-8 text-indigo-400" />
                 </div>
-                <h2 className="text-3xl font-semibold tracking-tight mb-2">Security Check</h2>
-                <p className="text-slate-400">We've sent a 4-digit code to your email.</p>
+                <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Security Check</h2>
+                <p className="text-xs md:text-sm text-slate-400">We've sent a 4-digit code to your email.</p>
               </div>
 
-              <div className="flex justify-center gap-4 mb-10">
+              <div className="flex justify-center gap-2 md:gap-4 mb-8 md:mb-10">
                 {code.map((digit, i) => (
                   <input
                     key={i}
@@ -1144,22 +938,22 @@ export default function App() {
                     value={digit}
                     onChange={(e) => handleCodeChange(i, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(i, e) }
-                    className="w-16 h-20 text-center text-3xl font-bold bg-black/20 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-colors text-white"
+                    className="w-12 h-16 md:w-16 md:h-20 text-center text-2xl md:text-3xl font-bold bg-black/20 border border-white/10 rounded-xl md:rounded-2xl outline-none focus:border-indigo-500 transition-colors text-white"
                   />
                 ))}
               </div>
 
               <button
                 onClick={handleVerify}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 group"
+                className="w-full py-3 md:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 group text-sm md:text-base"
               >
                 Verify Identity
-                <ShieldCheck className="w-5 h-5" />
+                <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />
               </button>
               
               <button 
                 onClick={() => setStep('login')}
-                className="w-full mt-4 py-2 text-slate-500 hover:text-slate-300 text-sm transition-colors"
+                className="w-full mt-4 py-2 text-slate-500 hover:text-slate-300 text-xs md:text-sm transition-colors"
               >
                 Back to login
               </button>
@@ -1174,15 +968,32 @@ export default function App() {
             animate={{ opacity: 1 }}
             className="flex w-full h-screen text-white"
           >
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+              {showMobileMenu && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowMobileMenu(false)}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
+                />
+              )}
+            </AnimatePresence>
+
             {/* Sidebar */}
             <motion.aside
-              animate={{ width: sidebarCollapsed ? 80 : 280 }}
+              initial={false}
+              animate={{ 
+                width: sidebarCollapsed ? 80 : 280,
+                x: showMobileMenu ? 0 : (typeof window !== 'undefined' && window.innerWidth < 768 ? -280 : 0)
+              }}
               transition={{ type: 'spring', stiffness: 300, damping: 35 }}
-              className="relative h-full glass-card border-r border-white/5 flex flex-col z-20 group/sidebar"
+              className={`fixed md:relative h-full glass-card border-r border-white/5 flex flex-col z-[60] group/sidebar transition-all duration-300 shadow-2xl md:shadow-none bg-[#0a0a0a]/90 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none`}
             >
               <div className="flex flex-col h-full">
-                <div className={`p-6 mb-8 flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 overflow-hidden">
+                <div className={`p-4 md:p-6 mb-4 md:mb-8 flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 overflow-hidden shadow-lg shadow-indigo-600/20">
                     {currentAgency?.logo ? (
                       <img src={currentAgency.logo} alt="Logo" className="w-full h-full object-cover" />
                     ) : (
@@ -1193,7 +1004,7 @@ export default function App() {
                     <motion.span 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-xl font-semibold tracking-tight"
+                      className="text-lg md:text-xl font-semibold tracking-tight truncate"
                     >
                       {currentAgency?.name || 'Portal'}
                     </motion.span>
@@ -1201,155 +1012,36 @@ export default function App() {
                 </div>
 
                 <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-                  {isAgencyRole && !impersonatingClientId ? (
-                    <>
-                      {/* Agency Hub Section */}
-                      <div className="mb-6 space-y-1">
-                        {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-2 px-4">Agency Workspace</div>}
-                        <SidebarItem icon={LayoutDashboard} label="Dashboard" active={portalView === 'agency-hub'} onClick={() => handleViewChange('agency-hub')} collapsed={sidebarCollapsed} />
-                        <SidebarItem icon={Users} label="Clients" active={portalView === 'agency-clients'} onClick={() => handleViewChange('agency-clients')} collapsed={sidebarCollapsed} badge={clients.length} />
-                        <SidebarItem icon={Briefcase} label="Projects" active={portalView === 'project-hub'} onClick={() => handleViewChange('project-hub')} collapsed={sidebarCollapsed} badge={projects.length} />
-                        <SidebarItem icon={MessageSquare} label="Inbox" active={portalView === 'agency-communicate'} onClick={() => handleViewChange('agency-communicate')} collapsed={sidebarCollapsed} badge={tickets.filter(t => t.status === 'Open').length} />
-                        <SidebarItem icon={UserCog} label="Team" active={portalView === 'employee-management'} onClick={() => handleViewChange('employee-management')} collapsed={sidebarCollapsed} />
-                      </div>
-
-                      {/* Founder Section */}
-                      {currentUser?.role === 'Founder' && (
-                        <div className="mb-6 space-y-1">
-                          {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-400 mb-2 px-4 italic">Founder Tools</div>}
-                          <SidebarItem icon={History} label="Global Activity" active={portalView === 'global-activity'} onClick={() => handleViewChange('global-activity')} collapsed={sidebarCollapsed} />
-                          <SidebarItem icon={ShieldAlert} label="AI Monitor" active={portalView === 'ai-sessions'} onClick={() => handleViewChange('ai-sessions')} collapsed={sidebarCollapsed} />
-                        </div>
-                      )}
-
-                      {/* Custom Sidebar Links */}
-                      {customSidebarLinks.length > 0 && (
-                        <div className="mb-6 space-y-1">
-                          {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-emerald-400 mb-2 px-4 italic">Custom Links</div>}
-                          {customSidebarLinks
-                            .filter(link => currentUser && (link.roles.includes(currentUser.role) || currentUser.permissions.includes(link.view as any)))
-                            .sort((a, b) => a.order - b.order)
-                            .map(link => {
-                              // Dynamic icon mapping fallback
-                              const IconComponent = iconMap[link.iconName] || Link2;
-                              
-                              return (
-                                <SidebarItem 
-                                  key={link.id}
-                                  icon={IconComponent} 
-                                  label={link.label} 
-                                  active={portalView === link.view} 
-                                  onClick={() => handleViewChange(link.view as any)} 
-                                  collapsed={sidebarCollapsed} 
-                                />
-                              );
-                            })}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {/* Client-Facing View */}
-                      {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest font-bold text-slate-600 mb-2 px-4">
-                        {activeClient ? 'Client Portal' : 'Main'}
-                      </div>}
-                      {hasPermission('dashboard') && activeClient?.stage === 'live' && (
-                        <SidebarItem icon={LayoutDashboard} label="Live Dashboard" active={portalView === 'dashboard'} onClick={() => handleViewChange('dashboard')} collapsed={sidebarCollapsed} />
-                      )}
-                      {/* ... other client items continue here ... */}
-
-                      {/* Stage-specific Dashboards */}
-                      {activeClient?.stage === 'discovery' && (
-                        <>
-                          <SidebarItem 
-                            view="discovery-dashboard" 
-                            icon={Compass} 
-                            label="Discovery Dashboard" 
-                            active={portalView === 'discovery-dashboard'}
-                            collapsed={sidebarCollapsed}
-                            onClick={() => handleViewChange('discovery-dashboard')}
-                          />
-                          <SidebarItem 
-                            view="onboarding" 
-                            icon={FileText} 
-                            label="Discovery Form" 
-                            active={portalView === 'onboarding'}
-                            collapsed={sidebarCollapsed}
-                            onClick={() => handleViewChange('onboarding')}
-                          />
-                        </>
-                      )}
-
-                      {activeClient?.stage === 'design' && (
+                  {getSidebarItems({
+                    currentUser: currentUser!,
+                    activeClient,
+                    portalView,
+                    clients,
+                    projects,
+                    tickets,
+                    isAgencyRole,
+                    impersonatingClientId,
+                    hasPermission,
+                    handleViewChange,
+                    setShowEmployeeManagementModal,
+                    setShowAppLauncherModal,
+                    sidebarCollapsed
+                  }).map((section, index) => (
+                    <div key={index} className="mb-6 space-y-1">
+                      {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mb-2 px-4">{section.section}</div>}
+                      {section.items.map(item => (
                         <SidebarItem 
-                          view="design-dashboard" 
-                          icon={Palette} 
-                          label="Design Dashboard" 
-                          active={portalView === 'design-dashboard'}
+                          key={item.id}
+                          icon={item.icon}
+                          label={item.label}
+                          active={item.active}
+                          onClick={item.onClick}
                           collapsed={sidebarCollapsed}
-                          onClick={() => handleViewChange('design-dashboard')}
+                          badge={item.badge}
                         />
-                      )}
-
-                      {activeClient?.stage === 'development' && (
-                        <SidebarItem 
-                          view="dev-dashboard" 
-                          icon={Code2} 
-                          label="Dev Dashboard" 
-                          active={portalView === 'dev-dashboard'}
-                          collapsed={sidebarCollapsed}
-                          onClick={() => handleViewChange('dev-dashboard')}
-                        />
-                      )}
-
-                      {/* Collaboration Center - For design/dev phase */}
-                      {hasPermission('collaboration') && (activeClient?.stage === 'design' || activeClient?.stage === 'development') && (
-                        <SidebarItem 
-                          view="collaboration" 
-                          icon={Monitor} 
-                          label="Collaboration" 
-                          active={portalView === 'collaboration'}
-                          collapsed={sidebarCollapsed}
-                          onClick={() => handleViewChange('collaboration')}
-                        />
-                      )}
-
-                      {hasPermission('aqua-ai') && (
-                        <SidebarItem 
-                          view="aqua-ai" 
-                          icon={Sparkles} 
-                          label="Aqua AI" 
-                          active={portalView === 'aqua-ai'}
-                          collapsed={sidebarCollapsed}
-                          onClick={() => handleViewChange('aqua-ai')}
-                        />
-                      )}
-                      
-                      {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest font-bold text-slate-600 mt-6 mb-2 px-4">Operations</div>}
-                      {(hasPermission('workspaces') || hasPermission('company') || hasPermission('data-hub') || hasPermission('your-plan')) && (
-                        <SidebarItem 
-                          view="apps" 
-                          icon={LayoutGrid} 
-                          label="Apps & Tools" 
-                          active={['crm', 'website', 'discover', 'resources', 'data-hub', 'your-plan'].includes(portalView)}
-                          collapsed={sidebarCollapsed}
-                          onClick={() => setShowAppLauncherModal(true)}
-                        />
-                      )}
-                      
-                      {!sidebarCollapsed && <div className="text-[10px] uppercase tracking-widest font-bold text-slate-600 mt-6 mb-2 px-4">Help</div>}
-                      {hasPermission('support') && (
-                        <SidebarItem 
-                          view="support" 
-                          icon={HelpCircle} 
-                          label="Support & Help" 
-                          active={['support', 'feature-request', 'resources'].includes(portalView)}
-                          collapsed={sidebarCollapsed}
-                          onClick={() => handleViewChange('support')}
-                        />
-                      )}
-                    </>
-                  )}
+                      ))}
+                    </div>
+                  ))}
                 </nav>
 
 
@@ -1375,6 +1067,22 @@ export default function App() {
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-hidden relative bg-black/40 flex flex-col">
+              {/* Mobile Header */}
+              <div className="md:hidden h-16 bg-[#1e1e2d] border-b border-white/5 flex items-center justify-between px-6 z-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="font-bold text-lg tracking-tight">AquaPortal</span>
+                </div>
+                <button 
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="p-2 hover:bg-white/5 rounded-xl transition-colors"
+                >
+                  {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+              </div>
+
               {impersonatedUserEmail && (
                 <div className="h-10 bg-indigo-600/90 backdrop-blur-md flex items-center justify-between px-8 text-white z-50">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
@@ -1412,83 +1120,78 @@ export default function App() {
               )}
 
               {/* Top Header */}
-              <header className="h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center justify-between px-8 shrink-0 z-10">
+              <header className="h-16 border-b border-white/5 bg-black/20 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 shrink-0 z-10">
                 <div className="flex items-center gap-4">
-                  <h2 className="text-sm font-medium text-slate-400 capitalize">
+                  <h2 className="text-xs font-medium text-slate-400 capitalize truncate max-w-[150px] md:max-w-none">
                     {portalView.replace('-', ' ')}
                   </h2>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <button 
                     onClick={() => setShowGlobalTasksModal(true)}
-                    className="p-2 rounded-lg transition-all hover:bg-white/5 group relative text-slate-400 hover:text-indigo-400"
+                    className="p-1.5 md:p-2 rounded-lg transition-all hover:bg-white/5 group relative text-slate-400 hover:text-indigo-400"
                   >
-                    <CheckSquare className="w-5 h-5" />
+                    <CheckSquare className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                   <button 
                     onClick={() => setShowInboxModal(true)}
-                    className={`p-2 rounded-lg transition-all hover:bg-white/5 group relative ${showInboxModal ? 'text-indigo-400' : 'text-slate-400'}`}
+                    className={`p-1.5 md:p-2 rounded-lg transition-all hover:bg-white/5 group relative ${showInboxModal ? 'text-indigo-400' : 'text-slate-400'}`}
                   >
-                    <Clock className="w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-indigo-500 rounded-full border border-black" />
+                    <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-indigo-500 rounded-full border border-black" />
                   </button>
                   <button 
                     onClick={() => setShowInboxModal(true)}
-                    className={`p-2 rounded-lg transition-all hover:bg-white/5 group relative ${showInboxModal ? 'text-indigo-400' : 'text-slate-400'}`}
+                    className={`p-1.5 md:p-2 rounded-lg transition-all hover:bg-white/5 group relative ${showInboxModal ? 'text-indigo-400' : 'text-slate-400'}`}
                   >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-black" />
+                    <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full border border-black" />
                   </button>
-                  <div className="w-px h-4 bg-white/10 mx-2" />
-                     {userProfile.role === 'Founder' && (
-                    <div className="flex items-center gap-3 mr-4">
-                      <span className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Perspective:</span>
-                      <select 
-                        value={impersonatedUserEmail || userProfile.email}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (val === userProfile.email) {
-                            setImpersonatedUserEmail(null);
-                            setPortalView('dashboard');
-                          } else {
-                            const targetUser = users.find(u => u.email === val);
-                            if (targetUser) {
-                              setImpersonatedUserEmail(val);
-                              setPortalView('dashboard');
-                              addLog('Perspective Switched', `Founder is now viewing as ${targetUser.name} (${targetUser.role})`, 'system');
-                            }
-                          }
-                        }}
-                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-300 outline-none focus:border-indigo-500 transition-all cursor-pointer hover:bg-white/10"
-                      >
-                        <option value="edwardhallam07@gmail.com" className="bg-slate-900 italic">Self (Founder Mode)</option>
-                        <optgroup label="Test As Role" className="bg-slate-900">
-                          <option value="operator@example.com" className="bg-slate-900">Example Operator</option>
-                          <option value="manager@example.com" className="bg-slate-900">Example Manager</option>
-                          <option value="client@example.com" className="bg-slate-900">Example Client</option>
-                        </optgroup>
-                        <optgroup label="Impersonate User" className="bg-slate-900">
-                          {users.filter(u => u.id <= 4 && u.role !== 'Founder').map(u => (
-                            <option key={u.id} value={u.email} className="bg-slate-900">{u.name}</option>
-                          ))}
-                        </optgroup>
-                      </select>
-                    </div>
-                  )}
-
-                  <button 
-                    onClick={() => setShowSettingsModal(true)}
-                    className="flex items-center gap-3 pl-2 group"
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      appTheme === 'indigo' ? 'bg-indigo-600' :
-                      appTheme === 'cyan' ? 'bg-cyan-600' :
-                      appTheme === 'emerald' ? 'bg-emerald-600' :
-                      'bg-rose-600'
-                    }`}>
-                      {userProfile.avatar}
-                    </div>
-                  </button>
+                  <div className="w-px h-4 bg-white/10 mx-1 md:mx-2" />
+                  <div className="relative" ref={dropdownRef}>
+                    <button 
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center gap-2 md:gap-3 pl-1 md:pl-2 group"
+                    >
+                      <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-[9px] md:text-[10px] font-bold ${
+                        appTheme === 'indigo' ? 'bg-indigo-600' :
+                        appTheme === 'cyan' ? 'bg-cyan-600' :
+                        appTheme === 'emerald' ? 'bg-emerald-600' :
+                        'bg-rose-600'
+                      }`}>
+                        {userProfile.avatar}
+                      </div>
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-lg border border-white/10 z-50">
+                        <div className="p-2">
+                          {currentUser?.role === 'Founder' ? (
+                            <div className="space-y-1">
+                              <div className="px-4 py-1 text-xs text-slate-500 uppercase">Switch User</div>
+                              {users.map(u => (
+                                <button 
+                                  key={u.id} 
+                                  onClick={() => { 
+                                    setImpersonatedUserEmail(u.email); 
+                                    setIsDropdownOpen(false); 
+                                    addLog('Impersonation', `Switched to ${u.name}`, 'impersonation');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 rounded-lg"
+                                >
+                                  {u.name} ({u.role})
+                                </button>
+                              ))}
+                              <div className="border-t border-white/10 my-1"></div>
+                              <button onClick={() => { setPortalView('workspaces'); setIsDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 rounded-lg">View Workspaces</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => { /* Add logic for Add Account */ setIsDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10 rounded-lg">Add Account</button>
+                          )}
+                          <button onClick={() => { handleLogout(); setIsDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 rounded-lg">Log Out</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </header>
 
@@ -1540,26 +1243,26 @@ export default function App() {
                       key="admin-dashboard"
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="p-10 max-w-6xl mx-auto w-full"
+                      className="p-6 md:p-10 max-w-6xl mx-auto w-full"
                     >
-                      <div className="flex items-center justify-between mb-10">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                         <div>
-                          <h2 className="text-3xl font-semibold mb-2">
+                          <h2 className="text-2xl md:text-3xl font-semibold mb-2">
                             {currentUser?.role === 'Founder' ? 'Founder Command Center' : 
                              currentUser?.role === 'AgencyManager' ? 'Agency Operations' : 
                              'Employee Dashboard'}
                           </h2>
-                          <p className="text-slate-500">
+                          <p className="text-sm md:text-base text-slate-500">
                             {currentUser?.role === 'Founder' ? 'Global overview of your agency performance and growth.' : 
                              currentUser?.role === 'AgencyManager' ? 'Manage your team, clients, and operational workflows.' : 
                              'Track your assigned clients and daily tasks.'}
                           </p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 w-full md:w-auto">
                           {isAgencyAdmin && (
                             <button 
                               onClick={() => setShowAddClientModal(true)}
-                              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
+                              className="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
                             >
                               <Plus className="w-5 h-5" />
                               Add New Client
@@ -1568,7 +1271,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
                         {currentUser?.role === 'Founder' ? (
                           <>
                             <DashboardWidget 
@@ -1832,38 +1535,40 @@ export default function App() {
                       key="client-management"
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="p-10 max-w-6xl mx-auto w-full"
+                      className="p-6 md:p-10 max-w-6xl mx-auto w-full"
                     >
-                      <div className="flex items-center justify-between mb-10">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                         <div>
-                          <h2 className="text-3xl font-semibold mb-2">Client Management</h2>
-                          <p className="text-slate-500">Configure client profiles and feature access.</p>
+                          <h2 className="text-2xl md:text-3xl font-semibold mb-2">Client Management</h2>
+                          <p className="text-sm md:text-base text-slate-500">Configure client profiles and feature access.</p>
                         </div>
                         <button 
                           onClick={() => setPortalView('admin-dashboard')}
-                          className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm"
+                          className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm self-start md:self-auto"
                         >
                           <ArrowLeft className="w-4 h-4" />
                           Back to Dashboard
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                        <div className="lg:col-span-1 space-y-4">
-                          {clients.map(client => (
-                            <button
-                              key={client.id}
-                              onClick={() => setSelectedClientId(client.id)}
-                              className={`w-full p-4 rounded-2xl text-left transition-all ${
-                                selectedClientId === client.id 
-                                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-                                  : 'glass-card hover:bg-white/5 text-slate-400'
-                              }`}
-                            >
-                              <div className="font-medium">{client.name}</div>
-                              <div className="text-[10px] uppercase tracking-widest mt-1 opacity-60">{client.stage}</div>
-                            </button>
-                          ))}
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8">
+                        <div className="lg:col-span-1 space-y-3 md:space-y-4">
+                          <div className="flex flex-col gap-3">
+                            {clients.map(client => (
+                              <button
+                                key={client.id}
+                                onClick={() => setSelectedClientId(client.id)}
+                                className={`w-full p-4 rounded-2xl text-left transition-all ${
+                                  selectedClientId === client.id 
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
+                                    : 'glass-card hover:bg-white/5 text-slate-400'
+                                }`}
+                              >
+                                <div className="font-medium text-sm md:text-base">{client.name}</div>
+                                <div className="text-[9px] md:text-[10px] uppercase tracking-widest mt-1 opacity-60">{client.stage}</div>
+                              </button>
+                            ))}
+                          </div>
                           <button 
                             onClick={handleAddClient}
                             className="w-full p-4 rounded-2xl border border-dashed border-white/10 text-slate-500 hover:text-white hover:border-white/20 transition-all text-sm flex items-center justify-center gap-2"
@@ -1875,20 +1580,20 @@ export default function App() {
 
                         <div className="lg:col-span-3">
                           {managedClient ? (
-                            <div className="space-y-8">
-                              <div className="glass-card p-8 rounded-3xl">
-                                <div className="flex items-center justify-between mb-8">
-                                  <h3 className="text-xl font-medium">Client Profile: {managedClient.name}</h3>
+                            <div className="space-y-6 md:space-y-8">
+                              <div className="glass-card p-6 md:p-8 rounded-2xl md:rounded-3xl">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                                  <h3 className="text-lg md:text-xl font-medium">Client Profile: {managedClient.name}</h3>
                                   <button 
                                     onClick={() => handleImpersonate(managedClient.id)}
-                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-2 transition-colors text-sm"
+                                    className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm w-full sm:w-auto"
                                   >
                                     <Monitor className="w-4 h-4" />
                                     Impersonate View
                                   </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                                   <div className="space-y-6">
                                     <div>
                                       <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2 block">Current Stage</label>
@@ -1897,7 +1602,7 @@ export default function App() {
                                           <button
                                             key={stage}
                                             onClick={() => handleUpdateClientStage(managedClient.id, stage)}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-medium transition-all ${
                                               managedClient.stage === stage 
                                                 ? 'bg-indigo-600 text-white' 
                                                 : 'bg-white/5 text-slate-500 hover:bg-white/10'
@@ -1911,7 +1616,7 @@ export default function App() {
 
                                     <div>
                                       <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-2 block">Feature Permissions</label>
-                                      <div className="space-y-2">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         {['dashboard', 'crm', 'website', 'analytics', 'support', 'onboarding', 'collaboration', 'aqua-ai', 'workspaces', 'company', 'data-hub', 'your-plan'].map(perm => (
                                           <label key={perm} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
                                             <input 
@@ -1925,7 +1630,7 @@ export default function App() {
                                               }}
                                               className="w-4 h-4 rounded border-white/10 bg-white/5 text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-sm capitalize">{perm.replace('-', ' ')}</span>
+                                            <span className="text-xs md:text-sm capitalize">{perm.replace('-', ' ')}</span>
                                           </label>
                                         ))}
                                       </div>
@@ -1968,11 +1673,11 @@ export default function App() {
                                         </button>
                                       </div>
                                       <div className="space-y-2 mb-6">
-                                        {managedClient.resources.length === 0 ? (
+                                        {(managedClient.resources || []).length === 0 ? (
                                           <p className="text-xs text-slate-600 italic">No resources uploaded yet.</p>
                                         ) : (
-                                          managedClient.resources.map((res, i) => (
-                                            <div key={res.name} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                                          (managedClient.resources || []).map((res, i) => (
+                                            <div key={`${res.name}-${i}`} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
                                               <span className="text-sm truncate mr-2">{res.name}</span>
                                               <Download className="w-4 h-4 text-slate-500" />
                                             </div>
@@ -2031,72 +1736,72 @@ export default function App() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="p-10 max-w-6xl mx-auto w-full"
+                      className="p-4 md:p-6 lg:p-10 max-w-6xl mx-auto w-full"
                     >
-                      <div className="flex items-center justify-between mb-10">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
                         <div>
-                          <h1 className="text-3xl font-semibold mb-2">Dashboard Overview</h1>
-                          <p className="text-slate-500">Welcome back, {userProfile.name}. Here's what's happening today.</p>
+                          <h1 className="text-2xl md:text-3xl font-semibold mb-2">Dashboard Overview</h1>
+                          <p className="text-sm md:text-base text-slate-500">Welcome back, {userProfile.name}. Here's what's happening today.</p>
                         </div>
-                        <div className="flex gap-3">
+                        <div className="flex items-center gap-3">
                           {currentUser?.role === 'ClientOwner' && (
                             <button 
                               onClick={() => setShowAddUserModal(true)}
-                              className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 transition-all active:scale-[0.98] flex items-center gap-2"
+                              className="flex-1 md:flex-none px-4 md:px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl border border-white/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-xs md:text-sm shadow-lg"
                             >
                               <Users className="w-4 h-4" />
                               Manage Team
                             </button>
                           )}
-                          <div className="px-4 py-2 glass-card rounded-xl flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            <span className="text-xs font-medium">Live Traffic</span>
+                          <div className="px-4 py-2.5 glass-card rounded-xl flex items-center gap-2 border border-white/5">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[10px] md:text-xs font-medium">Live Traffic</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div className="glass-card p-6 rounded-3xl">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
+                        <div className="glass-card p-5 md:p-6 rounded-2xl md:rounded-3xl border border-white/5 hover:border-white/10 transition-all group">
                           <div className="flex items-center justify-between mb-4">
-                            <div className="p-2 bg-indigo-500/20 rounded-lg">
+                            <div className="p-2 bg-indigo-500/20 rounded-lg group-hover:scale-110 transition-transform">
                               <Users className="w-5 h-5 text-indigo-400" />
                             </div>
                             <span className="text-xs text-emerald-400 font-medium">+12%</span>
                           </div>
-                          <div className="text-2xl font-bold mb-1">2,845</div>
-                          <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Total Users</div>
+                          <div className="text-xl md:text-2xl font-bold mb-1">2,845</div>
+                          <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Total Users</div>
                         </div>
-                        <div className="glass-card p-6 rounded-3xl">
+                        <div className="glass-card p-5 md:p-6 rounded-2xl md:rounded-3xl border border-white/5 hover:border-white/10 transition-all group">
                           <div className="flex items-center justify-between mb-4">
-                            <div className="p-2 bg-cyan-500/20 rounded-lg">
+                            <div className="p-2 bg-cyan-500/20 rounded-lg group-hover:scale-110 transition-transform">
                               <Globe className="w-5 h-5 text-cyan-400" />
                             </div>
                             <span className="text-xs text-emerald-400 font-medium">+5.2%</span>
                           </div>
-                          <div className="text-2xl font-bold mb-1">45.2k</div>
-                          <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Page Views</div>
+                          <div className="text-xl md:text-2xl font-bold mb-1">45.2k</div>
+                          <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Page Views</div>
                         </div>
-                        <div className="glass-card p-6 rounded-3xl">
+                        <div className="glass-card p-5 md:p-6 rounded-2xl md:rounded-3xl sm:col-span-2 md:col-span-1 border border-white/5 hover:border-white/10 transition-all group">
                           <div className="flex items-center justify-between mb-4">
-                            <div className="p-2 bg-purple-500/20 rounded-lg">
+                            <div className="p-2 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
                               <Zap className="w-5 h-5 text-purple-400" />
                             </div>
                             <span className="text-xs text-red-400 font-medium">-2%</span>
                           </div>
-                          <div className="text-2xl font-bold mb-1">1.2s</div>
-                          <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Avg. Load Time</div>
+                          <div className="text-xl md:text-2xl font-bold mb-1">1.2s</div>
+                          <div className="text-[10px] md:text-xs text-slate-500 uppercase tracking-widest font-bold">Avg. Load Time</div>
                         </div>
                       </div>
 
-                      <div className="glass-card p-8 rounded-[2.5rem] mb-10">
-                        <div className="flex items-center justify-between mb-8">
+                      <div className="glass-card p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] mb-8 md:mb-10 border border-white/5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
                           <h3 className="text-lg font-medium">Growth Analytics</h3>
-                          <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none">
+                          <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs outline-none self-start sm:self-auto focus:border-indigo-500 transition-colors">
                             <option>Last 7 Days</option>
                             <option>Last 30 Days</option>
                           </select>
                         </div>
-                        <div className="h-[300px] w-full">
+                        <div className="h-[200px] sm:h-[250px] md:h-[300px] w-full">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={dashboardData}>
                               <defs>
@@ -2152,45 +1857,45 @@ export default function App() {
                     className="h-full w-full flex flex-col relative"
                   >
                     {/* Subtle Aqua Glow */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-cyan-500/5 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none z-0" />
 
                     {/* Chat Header */}
-                    <div className="p-6 border-b border-white/5 flex items-center justify-between bg-black/20 backdrop-blur-md z-10">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center">
-                          <Sparkles className="w-6 h-6 text-cyan-400" />
+                    <div className="p-4 md:p-6 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-black/20 backdrop-blur-md z-10">
+                      <div className="flex items-center gap-3 md:gap-4">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-cyan-500/20 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-cyan-400" />
                         </div>
                         <div>
-                          <h2 className="text-xl font-semibold tracking-tight">Aqua AI</h2>
+                          <h2 className="text-base md:text-xl font-semibold tracking-tight">Aqua AI</h2>
                           <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">System Online</span>
+                            <div className="w-1.5 h-1.5 md:w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[8px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold">System Online</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 self-end sm:self-auto">
                         <button className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors">
-                          <Zap className="w-5 h-5" />
+                          <Zap className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                         <button className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors">
-                          <Settings className="w-5 h-5" />
+                          <Settings className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                       </div>
                     </div>
 
                     {/* Chat Area */}
-                    <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar z-10">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6 custom-scrollbar z-10">
                       {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[80%] p-4 rounded-2xl ${
+                        <div key={msg.id || i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[90%] sm:max-w-[80%] p-3 md:p-4 rounded-2xl ${
                             msg.role === 'user' 
                               ? 'bg-indigo-600/20 border border-indigo-500/30 rounded-tr-none' 
                               : 'glass-card border-cyan-500/20 rounded-tl-none'
                           }`}>
-                            <p className="text-sm leading-relaxed">
+                            <p className="text-xs md:text-sm leading-relaxed">
                               {msg.text}
                             </p>
-                            <span className={`text-[10px] mt-2 block ${msg.role === 'user' ? 'text-indigo-400/60' : 'text-slate-500'}`}>
+                            <span className={`text-[9px] md:text-[10px] mt-2 block ${msg.role === 'user' ? 'text-indigo-400/60' : 'text-slate-500'}`}>
                               {msg.time}
                             </span>
                           </div>
@@ -2200,28 +1905,28 @@ export default function App() {
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="px-8 py-4 flex gap-3 overflow-x-auto custom-scrollbar no-scrollbar z-10">
+                    <div className="px-4 md:px-8 py-3 md:py-4 flex gap-2 md:gap-3 overflow-x-auto custom-scrollbar no-scrollbar z-10">
                       <button 
                         onClick={() => setInputMessage("Analyze CRM Data")}
-                        className="whitespace-nowrap px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-slate-400 transition-all"
+                        className="whitespace-nowrap px-3 md:px-4 py-1.5 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] md:text-xs text-slate-400 transition-all"
                       >
                         Analyze CRM Data
                       </button>
                       <button 
                         onClick={() => setInputMessage("Check Billing Status")}
-                        className="whitespace-nowrap px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-slate-400 transition-all"
+                        className="whitespace-nowrap px-3 md:px-4 py-1.5 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] md:text-xs text-slate-400 transition-all"
                       >
                         Check Billing Status
                       </button>
                       <button 
                         onClick={() => handleViewChange('updates')}
-                        className="whitespace-nowrap px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-slate-400 transition-all"
+                        className="whitespace-nowrap px-3 md:px-4 py-1.5 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] md:text-xs text-slate-400 transition-all"
                       >
                         Planned Updates
                       </button>
                       <button 
                         onClick={() => handleViewChange('support')}
-                        className="whitespace-nowrap px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-slate-400 transition-all"
+                        className="whitespace-nowrap px-3 md:px-4 py-1.5 md:py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] md:text-xs text-slate-400 transition-all"
                       >
                         Support Hub
                       </button>
@@ -2263,23 +1968,23 @@ export default function App() {
                     key="resources"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-6 md:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex items-center justify-between mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                       <div>
-                        <h2 className="text-3xl font-semibold mb-2">Resources</h2>
-                        <p className="text-slate-500">Training materials, documentation, and helpful guides.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold mb-2">Resources</h2>
+                        <p className="text-sm md:text-base text-slate-500">Training materials, documentation, and helpful guides.</p>
                       </div>
                       <button 
                         onClick={() => handleViewChange('support')}
-                        className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm"
+                        className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm self-start md:self-auto"
                       >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Help
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                       {[
                         { title: 'Getting Started Guide', category: 'Basics', icon: BookOpen, description: 'Learn the fundamentals of navigating and using the portal.' },
                         { title: 'CRM Best Practices', category: 'Training', icon: Users, description: 'Optimize your workflow with our recommended CRM strategies.' },
@@ -2332,9 +2037,9 @@ export default function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="h-full w-full p-6 flex flex-col"
+                    className="h-full w-full p-6 md:p-10 flex flex-col"
                   >
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-6">
                       <button 
                         onClick={() => handleViewChange('workspaces')}
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm"
@@ -2378,10 +2083,10 @@ export default function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="h-full w-full p-6 flex flex-col gap-6"
+                    className="h-full w-full p-6 md:p-10 flex flex-col gap-8"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                      <div className="flex items-center gap-4 md:gap-6">
                         <button 
                           onClick={() => handleViewChange('workspaces')}
                           className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors"
@@ -2390,20 +2095,20 @@ export default function App() {
                         </button>
                         <div className="flex items-center gap-3">
                           <Globe className="w-6 h-6 text-indigo-400" />
-                          <h2 className="text-2xl font-semibold tracking-tight">Website Editor</h2>
+                          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Website Editor</h2>
                         </div>
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <button 
                           onClick={() => alert('Report generation started...')}
-                          className="px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                          className="w-full sm:w-auto px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
                         >
                           <FileText className="w-4 h-4" />
                           Run a report
                         </button>
                         <button 
                           onClick={() => handleViewChange('dashboard')}
-                          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                          className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2"
                         >
                           <BarChart3 className="w-4 h-4" />
                           Analytics dashboard
@@ -2445,22 +2150,22 @@ export default function App() {
                     key="logs"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto"
+                    className="h-full w-full p-6 md:p-10 overflow-y-auto"
                   >
-                    <div className="flex items-center justify-between mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
                       <div>
-                        <h2 className="text-3xl font-semibold tracking-tight mb-2">Activity Logs</h2>
-                        <p className="text-slate-400">Monitor system activity and user actions.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Activity Logs</h2>
+                        <p className="text-sm md:text-base text-slate-400">Monitor system activity and user actions.</p>
                       </div>
-                      <div className="flex gap-4">
-                        <select className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-colors text-white">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <select className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500 transition-colors text-white w-full sm:w-auto">
                           <option value="all">All Types</option>
                           <option value="auth">Authentication</option>
                           <option value="impersonation">Impersonation</option>
                           <option value="action">Actions</option>
                           <option value="system">System</option>
                         </select>
-                        <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-colors">
+                        <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-colors w-full sm:w-auto">
                           Export Logs
                         </button>
                       </div>
@@ -2487,7 +2192,7 @@ export default function App() {
                                 <td className="p-4">
                                   <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400">
-                                      {log.userName.split(' ').map(n => n[0]).join('')}
+                                      {((log.userName || '').split(' ') || []).map(n => n[0]).join('')}
                                     </div>
                                     <span className="text-sm font-medium whitespace-nowrap">{log.userName}</span>
                                   </div>
@@ -2516,79 +2221,102 @@ export default function App() {
 
 
 
-                {portalView === 'your-plan' && (
+                <PlanModal 
+                  isOpen={showPlanModal}
+                  onClose={() => setShowPlanModal(false)}
+                />
+
+                <EmployeeManagementModal 
+                  isOpen={showEmployeeManagementModal}
+                  onClose={() => setShowEmployeeManagementModal(false)}
+                  onAddUser={() => {
+                    setShowEmployeeManagementModal(false);
+                    setShowAddUserModal(true);
+                  }}
+                  onDeleteUser={handleDeleteUser}
+                />
+
+                <EmployeeProfileModal 
+                  isOpen={showEmployeeProfileModal} 
+                  onClose={() => setShowEmployeeProfileModal(false)}
+                  userProfile={userProfile}
+                  setUserProfile={setUserProfile}
+                  currentUser={currentUser}
+                  isEditingProfile={isEditingProfile}
+                  setIsEditingProfile={setIsEditingProfile}
+                  users={users}
+                  setUsers={setUsers}
+                  addLog={addLog}
+                />
+
+                <AgencyCommunicateModal 
+                  isOpen={showAgencyCommunicateModal}
+                  onClose={() => setShowAgencyCommunicateModal(false)}
+                />
+
+                {portalView === 'support-tickets' && (
                   <motion.div
-                    key="your-plan"
+                    key="support-tickets"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex items-center justify-between mb-10">
-                      <h2 className="text-3xl font-semibold">Your Plan</h2>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-semibold">Support Tickets</h2>
+                        <p className="text-sm md:text-base text-slate-400">Track and manage client requests and internal issues.</p>
+                      </div>
                       <button 
-                        onClick={() => handleViewChange('dashboard')}
-                        className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm"
+                        onClick={() => setShowTicketModal(true)}
+                        className="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
                       >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back
+                        <Plus className="w-4 h-4" />
+                        New Ticket
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                      <div className="lg:col-span-1 glass-card p-8 rounded-3xl bg-indigo-600/10 border-indigo-500/20">
-                        <div className="text-slate-400 text-sm mb-2">Next Payment Due</div>
-                        <div className="text-4xl font-bold mb-4">£249.00</div>
-                        <div className="flex items-center gap-2 text-indigo-400 font-medium">
-                          <Calendar className="w-4 h-4" />
-                          April 15, 2026
-                        </div>
-                      </div>
-
-                      <div className="lg:col-span-2 glass-card p-8 rounded-3xl flex items-center justify-between">
-                        <div>
-                          <div className="text-slate-400 text-sm mb-2">Current Plan</div>
-                          <div className="text-2xl font-semibold">Premium Enterprise</div>
-                        </div>
-                        <button className="px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors font-medium">
-                          Manage Plan
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="glass-card rounded-3xl overflow-hidden">
-                      <div className="p-6 border-b border-white/5">
-                        <h3 className="font-medium">Payment History</h3>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                    <div className="glass-card rounded-2xl md:rounded-3xl overflow-hidden border border-white/5">
+                      <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-left min-w-[700px]">
                           <thead>
-                            <tr className="text-slate-500 text-xs uppercase tracking-widest border-b border-white/5">
-                              <th className="px-8 py-4 font-semibold">Invoice</th>
-                              <th className="px-8 py-4 font-semibold">Date</th>
-                              <th className="px-8 py-4 font-semibold">Amount</th>
-                              <th className="px-8 py-4 font-semibold">Status</th>
-                              <th className="px-8 py-4 font-semibold text-right">Action</th>
+                            <tr className="text-slate-500 text-[10px] md:text-xs uppercase tracking-widest border-b border-white/5 bg-white/[0.02]">
+                              <th className="px-6 md:px-8 py-4 font-semibold">ID</th>
+                              <th className="px-6 md:px-8 py-4 font-semibold">Ticket Details</th>
+                              <th className="px-6 md:px-8 py-4 font-semibold">Type</th>
+                              <th className="px-6 md:px-8 py-4 font-semibold">Status</th>
+                              <th className="px-6 md:px-8 py-4 font-semibold text-right">Created By</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-white/5">
-                            {[
-                              { id: 'INV-001', date: 'Mar 15, 2026', amount: '£249.00', status: 'Paid' },
-                              { id: 'INV-002', date: 'Feb 15, 2026', amount: '£249.00', status: 'Paid' },
-                              { id: 'INV-003', date: 'Jan 15, 2026', amount: '£249.00', status: 'Paid' }
-                            ].map(inv => (
-                              <tr key={inv.id} className="hover:bg-white/5 transition-colors">
-                                <td className="px-8 py-4 font-medium">{inv.id}</td>
-                                <td className="px-8 py-4 text-slate-400">{inv.date}</td>
-                                <td className="px-8 py-4">{inv.amount}</td>
-                                <td className="px-8 py-4">
-                                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-widest">
-                                    {inv.status}
+                            {tickets.map(ticket => (
+                              <tr key={ticket.id} className="hover:bg-white/5 transition-colors group">
+                                <td className="px-6 md:px-8 py-4 font-medium text-indigo-400 text-sm">{ticket.id}</td>
+                                <td className="px-6 md:px-8 py-4">
+                                  <div className="font-medium text-sm md:text-base group-hover:text-indigo-300 transition-colors">{ticket.title}</div>
+                                  <div className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 ${
+                                    ticket.priority === 'High' ? 'text-red-400' : 
+                                    ticket.priority === 'Medium' ? 'text-amber-400' : 'text-indigo-400'
+                                  }`}>
+                                    {ticket.priority} Priority
+                                  </div>
+                                </td>
+                                <td className="px-6 md:px-8 py-4">
+                                  <span className={`px-2 md:px-3 py-1 text-[8px] md:text-[9px] font-bold rounded-full uppercase tracking-widest border ${
+                                    ticket.type === 'client' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-400 border-white/5'
+                                  }`}>
+                                    {ticket.type}
                                   </span>
                                 </td>
-                                <td className="px-8 py-4 text-right">
-                                  <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-indigo-400">
-                                    <Download className="w-4 h-4" />
-                                  </button>
+                                <td className="px-6 md:px-8 py-4">
+                                  <span className={`px-2 md:px-3 py-1 text-[9px] md:text-[10px] font-bold rounded-full uppercase tracking-widest ${
+                                    ticket.status === 'Open' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
+                                  }`}>
+                                    {ticket.status}
+                                  </span>
+                                </td>
+                                <td className="px-6 md:px-8 py-4 text-right">
+                                  <div className="text-xs md:text-sm font-medium">{ticket.creator}</div>
+                                  <div className="text-[9px] md:text-[10px] text-slate-500">{new Date(ticket.createdAt).toLocaleDateString()}</div>
                                 </td>
                               </tr>
                             ))}
@@ -2599,312 +2327,28 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {portalView === 'employee-management' && (
-                  <EmployeeManagementView 
-                    onAddUser={() => setShowAddUserModal(true)} 
-                    onDeleteUser={handleDeleteUser} 
-                  />
-                )}
-
-                {portalView === 'employee-profile' && (
-                  <motion.div
-                    key="employee-profile"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="max-w-4xl mx-auto">
-                      <div className="flex items-center gap-8 mb-12">
-                        <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 text-white flex items-center justify-center text-4xl font-bold shadow-2xl shadow-indigo-600/30">
-                          {userProfile.avatar}
-                        </div>
-                        <div>
-                          <h2 className="text-4xl font-semibold mb-2">{userProfile.name}</h2>
-                          <div className="flex items-center gap-4 text-slate-400">
-                            <span className="flex items-center gap-1"><Mail className="w-4 h-4" /> {userProfile.email}</span>
-                            <span className="flex items-center gap-1"><ShieldCheck className="w-4 h-4" /> {currentUser?.role}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
-                          <h3 className="text-xl font-medium flex items-center gap-2">
-                             <User className="w-5 h-5 text-indigo-400" />
-                             General Information
-                          </h3>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Full Name</label>
-                              <input 
-                                type="text"
-                                value={userProfile.name}
-                                onChange={(e) => setUserProfile({...userProfile, name: e.target.value})}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-all"
-                                disabled={!isEditingProfile}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Bio / Role Description</label>
-                              <textarea 
-                                rows={3}
-                                value={currentUser?.bio || ''}
-                                onChange={(e) => setUsers(users.map(u => u.id === currentUser?.id ? { ...u, bio: e.target.value } : u))}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-all resize-none"
-                                disabled={!isEditingProfile}
-                                placeholder="Describe your role and impact..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
-                          <h3 className="text-xl font-medium flex items-center gap-2">
-                             <Clock className="w-5 h-5 text-emerald-400" />
-                             Availability
-                          </h3>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500">Working Hours</label>
-                              <div className="relative">
-                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                                <input 
-                                  type="text"
-                                  value={currentUser?.workingHours || '9:00 AM - 5:00 PM'}
-                                  onChange={(e) => setUsers(users.map(u => u.id === currentUser?.id ? { ...u, workingHours: e.target.value } : u))}
-                                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-all"
-                                  disabled={!isEditingProfile}
-                                  placeholder="e.g. Mon-Fri, 9-5"
-                                />
-                              </div>
-                            </div>
-                            <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                              <div className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Status</div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-sm font-medium">Currently Online</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-8 flex justify-end gap-4">
-                        {isEditingProfile ? (
-                          <>
-                            <button 
-                              onClick={() => setIsEditingProfile(false)}
-                              className="px-8 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-semibold transition-all"
-                            >
-                              Cancel
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setIsEditingProfile(false);
-                                addLog('Profile Updated', 'User updated their profile information', 'action');
-                              }}
-                              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-600/20"
-                            >
-                              Save Changes
-                            </button>
-                          </>
-                        ) : (
-                          <button 
-                            onClick={() => setIsEditingProfile(true)}
-                            className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-semibold transition-all flex items-center gap-2"
-                          >
-                            <Settings2 className="w-4 h-4" />
-                            Edit Profile
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {portalView === 'agency-communicate' && (
-                  <motion.div
-                    key="agency-communicate"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex h-full w-full overflow-hidden"
-                  >
-                    {/* Channel Sidebar */}
-                    <div className="w-64 border-r border-white/5 bg-white/[0.02] flex flex-col">
-                      <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                        <h3 className="font-semibold">Channels</h3>
-                        <PlusCircle className="w-4 h-4 text-slate-500 cursor-pointer hover:text-white" />
-                      </div>
-                      <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                        {['general', 'design', 'development', 'client-feedback'].map(channel => (
-                          <div key={channel} className={`px-4 py-2 rounded-xl text-sm cursor-pointer transition-all ${channel === 'general' ? 'bg-indigo-600/20 text-indigo-400 font-medium' : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'}`}>
-                            # {channel}
-                          </div>
-                        ))}
-                        <div className="pt-6 pb-2 text-[10px] uppercase tracking-widest font-bold text-slate-600 px-4">Direct Messages</div>
-                        {users.filter(u => u.id !== currentUser?.id).map(u => (
-                          <div key={u.id} className="px-4 py-2 rounded-xl text-sm cursor-pointer text-slate-500 hover:bg-white/5 hover:text-slate-300 flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                            {u.name}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Chat Area */}
-                    <div className="flex-1 flex flex-col">
-                      <div className="p-6 border-b border-white/5 flex items-center justify-between bg-black/20">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold"># general</h3>
-                          <span className="text-xs text-slate-500">Company-wide announcements and talk</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-slate-400">
-                          <Users className="w-4 h-4 cursor-pointer hover:text-white" />
-                          <Settings className="w-4 h-4 cursor-pointer hover:text-white" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
-                        {agencyMessages.map(msg => {
-                          const sender = users.find(u => u.id === msg.senderId);
-                          return (
-                            <div key={msg.id} className="flex gap-4 group">
-                              <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold shrink-0">
-                                {sender?.avatar}
-                              </div>
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-3">
-                                  <span className="font-semibold text-sm">{sender?.name}</span>
-                                  <span className="text-[10px] text-slate-600">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <p className="text-sm text-slate-300 leading-relaxed font-light">{msg.text}</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="p-6">
-                        <div className="relative">
-                          <input 
-                            type="text"
-                            placeholder="Message #general"
-                            className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && e.currentTarget.value) {
-                                setAgencyMessages([...agencyMessages, { 
-                                  id: Date.now().toString(), 
-                                  senderId: currentUser?.id || 1, 
-                                  text: e.currentTarget.value, 
-                                  timestamp: new Date().toISOString() 
-                                }]);
-                                e.currentTarget.value = '';
-                              }
-                            }}
-                          />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-500">
-                            <PlusCircle className="w-5 h-5 cursor-pointer hover:text-white" />
-                            <MessageCircle className="w-5 h-5 cursor-pointer hover:text-white" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {portalView === 'support-tickets' && (
-                  <motion.div
-                    key="support-tickets"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="flex items-center justify-between mb-10">
-                      <div>
-                        <h2 className="text-3xl font-semibold">Support Tickets</h2>
-                        <p className="text-slate-400">Track and manage client requests and internal issues.</p>
-                      </div>
-                      <button 
-                        onClick={() => setShowTicketModal(true)}
-                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-50 text-white font-semibold rounded-xl transition-all flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        New Ticket
-                      </button>
-                    </div>
-
-                    <div className="glass-card rounded-3xl overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="text-slate-500 text-xs uppercase tracking-widest border-b border-white/5">
-                            <th className="px-8 py-4 font-semibold">ID</th>
-                            <th className="px-8 py-4 font-semibold">Ticket Details</th>
-                            <th className="px-8 py-4 font-semibold">Type</th>
-                            <th className="px-8 py-4 font-semibold">Status</th>
-                            <th className="px-8 py-4 font-semibold text-right">Created By</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                          {tickets.map(ticket => (
-                            <tr key={ticket.id} className="hover:bg-white/5 transition-colors">
-                              <td className="px-8 py-4 font-medium text-indigo-400">{ticket.id}</td>
-                              <td className="px-8 py-4">
-                                <div className="font-medium">{ticket.title}</div>
-                                <div className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${
-                                  ticket.priority === 'High' ? 'text-red-400' : 
-                                  ticket.priority === 'Medium' ? 'text-amber-400' : 'text-indigo-400'
-                                }`}>
-                                  {ticket.priority} Priority
-                                </div>
-                              </td>
-                              <td className="px-8 py-4">
-                                <span className={`px-3 py-1 text-[9px] font-bold rounded-full uppercase tracking-widest border ${
-                                  ticket.type === 'client' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-400 border-white/5'
-                                }`}>
-                                  {ticket.type}
-                                </span>
-                              </td>
-                              <td className="px-8 py-4">
-                                <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase tracking-widest ${
-                                  ticket.status === 'Open' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'
-                                }`}>
-                                  {ticket.status}
-                                </span>
-                              </td>
-                              <td className="px-8 py-4 text-right">
-                                <div className="text-sm font-medium">{ticket.creator}</div>
-                                <div className="text-[10px] text-slate-500">{new Date(ticket.createdAt).toLocaleDateString()}</div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-
                 {portalView === 'project-hub' && (
                   <motion.div
                     key="project-hub"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex items-center justify-between mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
                       <div>
-                        <h2 className="text-3xl font-semibold">Project Hub</h2>
-                        <p className="text-slate-400">Strategic oversight of all agency & client initiatives.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold">Project Hub</h2>
+                        <p className="text-sm md:text-base text-slate-400">Strategic oversight of all agency & client initiatives.</p>
                       </div>
                       <button 
                         onClick={() => setShowNewProjectModal(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-600/20"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl md:rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                       >
                         <Plus className="w-5 h-5" />
                         New Project
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                       {projects.map(project => {
                         const client = clients.find(c => c.id === project.clientId);
                         const tasks = projectTasks.filter(t => t.projectId === project.id);
@@ -2912,27 +2356,27 @@ export default function App() {
                         const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
                         return (
-                          <div key={project.id} className="glass-card p-6 rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all group cursor-pointer" onClick={() => setPortalView('task-board')}>
-                            <div className="flex items-start justify-between mb-6">
-                              <div className="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400">
-                                <Briefcase className="w-6 h-6" />
+                          <div key={project.id} className="glass-card p-5 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all group cursor-pointer" onClick={() => setPortalView('task-board')}>
+                            <div className="flex items-start justify-between mb-4 md:mb-6">
+                              <div className="p-2 md:p-3 rounded-xl md:rounded-2xl bg-indigo-500/10 text-indigo-400 group-hover:scale-110 transition-transform">
+                                <Briefcase className="w-5 h-5 md:w-6 md:h-6" />
                               </div>
-                              <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${
+                              <span className={`text-[9px] md:text-[10px] font-bold px-2 md:px-3 py-1 rounded-full uppercase tracking-widest ${
                                 project.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
                               }`}>
                                 {project.status}
                               </span>
                             </div>
-                            <h3 className="text-xl font-semibold mb-2">{project.name}</h3>
-                            <p className="text-sm text-slate-500 line-clamp-2 mb-6">{project.description}</p>
+                            <h3 className="text-lg md:text-xl font-semibold mb-2 truncate group-hover:text-indigo-400 transition-colors">{project.name}</h3>
+                            <p className="text-xs md:text-sm text-slate-500 line-clamp-2 mb-4 md:mb-6">{project.description}</p>
                             
                             <div className="space-y-4">
-                              <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center justify-between text-[10px] md:text-xs">
                                 <span className="text-slate-500">Client</span>
-                                <span className="text-slate-300 font-medium">{client?.name || 'Internal'}</span>
+                                <span className="text-slate-300 font-medium truncate ml-2">{client?.name || 'Internal'}</span>
                               </div>
                               <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                <div className="flex items-center justify-between text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-500">
                                   <span>Progress</span>
                                   <span>{Math.round(progress)}%</span>
                                 </div>
@@ -2957,30 +2401,30 @@ export default function App() {
                     key="task-board"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="h-full w-full p-10 overflow-hidden flex flex-col"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-hidden flex flex-col"
                   >
-                    <div className="flex items-center justify-between mb-10 shrink-0">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10 shrink-0">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
-                          <button onClick={() => setPortalView('project-hub')} className="p-2 hover:bg-white/5 rounded-xl transition-all">
+                          <button onClick={() => setPortalView('project-hub')} className="p-2 hover:bg-white/5 rounded-xl transition-all active:scale-90">
                             <ArrowLeft className="w-5 h-5 text-slate-400" />
                           </button>
-                          <h2 className="text-3xl font-semibold">Active Tasks</h2>
+                          <h2 className="text-2xl md:text-3xl font-semibold">Active Tasks</h2>
                         </div>
-                        <p className="text-slate-400 ml-12">Kanban board for operational execution.</p>
+                        <p className="text-sm md:text-base text-slate-400 ml-0 md:ml-12">Kanban board for operational execution.</p>
                       </div>
                       <button 
                         onClick={() => setShowNewTaskModal(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl border border-white/10 transition-all active:scale-[0.98]"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl md:rounded-2xl border border-white/10 transition-all active:scale-[0.98] shadow-lg"
                       >
                         <Plus className="w-5 h-5 text-indigo-400" />
                         Create Task
                       </button>
                     </div>
 
-                    <div className="flex-1 flex gap-6 overflow-x-auto pb-4 custom-scrollbar">
+                    <div className="flex-1 flex gap-4 md:gap-6 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                       {(['Backlog', 'In Progress', 'Review', 'Done'] as const).map(status => (
-                        <div key={status} className="w-80 shrink-0 flex flex-col">
+                        <div key={status} className="w-[280px] md:w-80 shrink-0 flex flex-col">
                           <div className="flex items-center justify-between mb-4 px-2">
                             <div className="flex items-center gap-2">
                               <div className={`w-2 h-2 rounded-full ${
@@ -2988,23 +2432,23 @@ export default function App() {
                                 status === 'In Progress' ? 'bg-indigo-500' :
                                 status === 'Review' ? 'bg-amber-500' : 'bg-emerald-500'
                               }`} />
-                              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">{status}</h3>
+                              <h3 className="text-xs md:text-sm font-bold uppercase tracking-widest text-slate-400">{status}</h3>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
+                            <span className="text-[9px] md:text-[10px] font-bold text-slate-600 bg-white/5 px-2 py-0.5 rounded-full">
                               {projectTasks.filter(t => t.status === status).length}
                             </span>
                           </div>
                           
-                          <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                          <div className="flex-1 space-y-3 md:space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                             {projectTasks.filter(t => t.status === status).map(task => (
                               <motion.div
                                 key={task.id}
                                 layoutId={task.id}
                                 onClick={() => setSelectedTask(task)}
-                                className="glass-card p-5 rounded-3xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                                className="glass-card p-4 md:p-5 rounded-2xl md:rounded-3xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
                               >
                                 <div className="flex items-center justify-between mb-3">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-widest ${
+                                  <span className={`text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-lg uppercase tracking-widest ${
                                     task.priority === 'High' ? 'text-rose-400 bg-rose-400/10' :
                                     task.priority === 'Medium' ? 'text-amber-400 bg-amber-400/10' : 'text-indigo-400 bg-indigo-400/10'
                                   }`}>
@@ -3012,14 +2456,14 @@ export default function App() {
                                   </span>
                                   <div className="flex -space-x-2">
                                     {task.assigneeId && (
-                                      <div className="w-6 h-6 rounded-full bg-indigo-600 border border-slate-900 flex items-center justify-center text-[10px] font-bold text-white uppercase transform group-hover:scale-110 transition-transform">
+                                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-indigo-600 border border-slate-900 flex items-center justify-center text-[9px] md:text-[10px] font-bold text-white uppercase transform group-hover:scale-110 transition-transform">
                                         {users.find(u => u.id === task.assigneeId)?.avatar}
                                       </div>
                                     )}
                                   </div>
                                 </div>
-                                <h4 className="text-sm font-semibold mb-2 group-hover:text-indigo-400 transition-colors">{task.title}</h4>
-                                <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                <h4 className="text-xs md:text-sm font-semibold mb-2 group-hover:text-indigo-400 transition-colors line-clamp-2">{task.title}</h4>
+                                <div className="flex items-center gap-3 md:gap-4 text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                   <div className="flex items-center gap-1">
                                     <CheckCircle2 className="w-3 h-3" />
                                     {task.steps.filter(s => s.completed).length}/{task.steps.length}
@@ -3051,53 +2495,53 @@ export default function App() {
                     key="ai-sessions"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex items-center justify-between mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
                       <div>
-                        <h2 className="text-3xl font-semibold">AI Session Monitor</h2>
-                        <p className="text-slate-400">View and analyze all Aqua AI interactions across the platform.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold">AI Session Monitor</h2>
+                        <p className="text-sm md:text-base text-slate-400">View and analyze all Aqua AI interactions across the platform.</p>
                       </div>
                       <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-medium border border-white/5 transition-all">
+                        <button className="w-full md:w-auto px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-[10px] md:text-xs font-medium border border-white/5 transition-all active:scale-95">
                           Export All Sessions
                         </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12">
                       <DashboardWidget icon={Zap} label="Total AI Calls" value="1,284" trend="+12%" color="indigo" />
                       <DashboardWidget icon={Clock} label="Avg Response Time" value="1.2s" trend="-5%" color="emerald" />
                       <DashboardWidget icon={MessageSquare} label="Active Sessions" value="42" trend="+8%" color="amber" />
                     </div>
 
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium mb-6">Recent Sessions</h3>
+                    <div className="space-y-4 md:space-y-6">
+                      <h3 className="text-lg font-medium mb-4 md:mb-6">Recent Sessions</h3>
                       {aiSessions.map(session => (
-                        <div key={session.id} className="glass-card p-6 rounded-3xl space-y-4">
-                          <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold">
-                                {session.userName.split(' ').map(n => n[0]).join('')}
+                        <div key={session.id} className="glass-card p-4 md:p-6 rounded-2xl md:rounded-3xl space-y-4 border border-white/5">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold shrink-0 text-sm md:text-base">
+                                {((session.userName || '').split(' ') || []).map(n => n[0]).join('')}
                               </div>
-                              <div>
-                                <div className="font-semibold">{session.userName}</div>
-                                <div className="text-[10px] text-slate-500 uppercase tracking-widest">{session.id}</div>
+                              <div className="min-w-0">
+                                <div className="font-semibold text-sm md:text-base truncate">{session.userName}</div>
+                                <div className="text-[9px] md:text-[10px] text-slate-500 uppercase tracking-widest truncate">{session.id}</div>
                               </div>
                             </div>
-                            <span className="text-xs text-slate-500">{session.interactions.length} Interactions</span>
+                            <span className="text-[10px] md:text-xs text-slate-500 bg-white/5 px-2 py-1 rounded-lg self-start sm:self-auto">{(session.interactions || []).length} Interactions</span>
                           </div>
                           <div className="space-y-3">
-                            {session.interactions.map((int, i) => (
-                              <div key={i} className="p-4 bg-white/[0.02] rounded-2xl border border-white/5 space-y-2">
+                            {(session.interactions || []).map((int, i) => (
+                              <div key={`${session.id}-int-${i}`} className="p-3 md:p-4 bg-white/[0.02] rounded-xl md:rounded-2xl border border-white/5 space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Prompt</div>
-                                  <div className="text-[10px] text-slate-600">{new Date(int.timestamp).toLocaleTimeString()}</div>
+                                  <div className="text-[9px] md:text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Prompt</div>
+                                  <div className="text-[9px] md:text-[10px] text-slate-600">{new Date(int.timestamp).toLocaleTimeString()}</div>
                                 </div>
-                                <p className="text-sm text-slate-400 italic">"{int.prompt}"</p>
+                                <p className="text-xs md:text-sm text-slate-400 italic break-words">"{int.prompt}"</p>
                                 <div className="pt-2 border-t border-white/5">
-                                  <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">AI Response</div>
-                                  <p className="text-sm text-slate-300 line-clamp-2">{int.response}</p>
+                                  <div className="text-[9px] md:text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">AI Response</div>
+                                  <p className="text-xs md:text-sm text-slate-300 line-clamp-3 md:line-clamp-2 break-words">{int.response}</p>
                                 </div>
                               </div>
                             ))}
@@ -3110,82 +2554,22 @@ export default function App() {
 
 
 
+                {portalView === 'agency-configurator' && (
+                  <AgencyConfiguratorView />
+                )}
+                
+                {portalView === 'inbox' && (
+                  <InboxView />
+                )}
+
                 {portalView === 'agency-clients' && (
-                  <motion.div
-                    key="agency-clients"
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="flex items-center justify-between mb-10">
-                      <div>
-                        <h2 className="text-3xl font-semibold mb-2">Clients Under Control</h2>
-                        <p className="text-slate-400">View and impersonate clients to manage their workspaces and logs.</p>
-                      </div>
-                      <button 
-                        onClick={() => setShowAddClientModal(true)}
-                        className="flex items-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
-                      >
-                        <PlusCircle className="w-5 h-5" />
-                        Onboard Client
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {clients.map(client => (
-                        <div key={client.id} className="glass-card p-8 rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all group">
-                          <div className="flex items-start justify-between mb-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-16 h-16 rounded-2xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center">
-                                <Building2 className="w-8 h-8" />
-                              </div>
-                              <div>
-                                <h3 className="text-xl font-semibold mb-1">{client.name}</h3>
-                                <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">{client.stage} Phase</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-4 mb-8">
-                            <div className="flex items-center justify-between text-sm py-2 border-b border-white/5">
-                              <span className="text-slate-500">Authorized Access</span>
-                              <span className="text-slate-300">{client.permissions.length} Modules</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm py-2">
-                              <span className="text-slate-500">Contact</span>
-                              <span className="text-slate-300">{client.email}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3 mt-auto">
-                            <button
-                              onClick={() => handleImpersonate(client.id)}
-                              className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-amber-400 font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-amber-600 group-hover:text-white"
-                            >
-                              <Building2 className="w-4 h-4" />
-                              View Workspace
-                            </button>
-                            <button
-                              onClick={() => {
-                                const owner = users.find(u => u.clientId === client.id && u.role === 'ClientOwner');
-                                if (owner) {
-                                  setImpersonatedUserEmail(owner.email);
-                                  setPortalView('dashboard');
-                                  addLog('Impersonation', `Started impersonating ${owner.name} (Owner of ${client.name})`, 'impersonation');
-                                } else {
-                                  alert(`No owner account found for ${client.name}. Please create one first.`);
-                                }
-                              }}
-                              className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-indigo-400 font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-indigo-600 group-hover:text-white"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                              Impersonate Owner
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
+                  <AgencyClientsView 
+                    clients={clients}
+                    setShowAddClientModal={setShowAddClientModal}
+                    handleImpersonate={handleImpersonate}
+                    onEditClient={handleEditClient}
+                    onUpdateClientStage={handleUpdateClientStage}
+                  />
                 )}
 
                 {portalView === 'agency-hub' && (
@@ -3193,55 +2577,64 @@ export default function App() {
                     key="agency-hub"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="flex items-center justify-between mb-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
                       <div>
-                        <h2 className="text-3xl font-semibold">Agency Internal CRM</h2>
-                        <p className="text-slate-400">Unified command center for agency operations.</p>
+                        <h2 className="text-2xl md:text-3xl font-semibold">Agency Internal CRM</h2>
+                        <p className="text-sm md:text-base text-slate-400">Unified command center for agency operations.</p>
                       </div>
+                      {currentUser?.role === 'Founder' && (
+                        <button
+                          onClick={() => handleViewChange('agency-configurator')}
+                          className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
+                        >
+                          <Settings className="w-5 h-5" />
+                          Agency Configurator
+                        </button>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
                       <DashboardWidget icon={Users} label="Active Team" value={users.length.toString()} trend="+2" color="indigo" />
                       <DashboardWidget icon={Ticket} label="Open Tickets" value={tickets.filter(t => t.status === 'Open').length.toString()} trend="-1" color="emerald" />
                       <DashboardWidget icon={MessageSquare} label="Unread Comms" value="12" trend="+5" color="amber" />
                       <DashboardWidget icon={Zap} label="AI Sessions (24h)" value={aiSessions.length.toString()} trend="+8%" color="indigo" />
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                       {/* Team Overview Mini-Module */}
-                      <div className="glass-card p-6 rounded-3xl">
-                        <div className="flex items-center justify-between mb-6">
+                      <div className="glass-card p-4 md:p-6 rounded-2xl md:rounded-3xl">
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
                           <h3 className="font-semibold">Team Presence</h3>
-                          <button onClick={() => setPortalView('employee-management')} className="text-xs text-indigo-400 hover:text-indigo-300">View All</button>
+                          <button onClick={() => setShowEmployeeManagementModal(true)} className="text-xs text-indigo-400 hover:text-indigo-300">View All</button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                           {users.slice(0, 4).map(u => (
-                            <div key={u.id} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-2xl">
+                            <div key={u.id} className="flex items-center justify-between p-3 bg-white/[0.02] rounded-xl md:rounded-2xl">
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
                                   {u.avatar}
                                 </div>
-                                <span className="text-sm font-medium">{u.name}</span>
+                                <span className="text-sm font-medium truncate max-w-[120px] md:max-w-none">{u.name}</span>
                               </div>
-                              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Online</span>
+                              <span className="text-[9px] md:text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Online</span>
                             </div>
                           ))}
                         </div>
                       </div>
 
                       {/* Recent AI Interactions Mini-Module */}
-                      <div className="glass-card p-6 rounded-3xl">
-                        <div className="flex items-center justify-between mb-6">
+                      <div className="glass-card p-4 md:p-6 rounded-2xl md:rounded-3xl">
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
                           <h3 className="font-semibold">Live AI Stream</h3>
                           <button onClick={() => setPortalView('ai-sessions')} className="text-xs text-indigo-400 hover:text-indigo-300">Auditor</button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                           {aiSessions.slice(0, 2).map((session, i) => (
-                            <div key={session.id} className="p-4 bg-white/[0.02] rounded-2xl space-y-2">
-                              <div className="flex items-center justify-between text-[10px] text-slate-500">
-                                <span>{session.userName}</span>
+                            <div key={session.id} className="p-4 bg-white/[0.02] rounded-xl md:rounded-2xl space-y-2">
+                              <div className="flex items-center justify-between text-[9px] md:text-[10px] text-slate-500">
+                                <span className="truncate max-w-[100px]">{session.userName}</span>
                                 <span>Just now</span>
                               </div>
                               <p className="text-xs text-slate-300 line-clamp-1 italic">"{session.interactions[0].prompt}"</p>
@@ -3258,54 +2651,54 @@ export default function App() {
                     key="founder-todos"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
                     <div className="max-w-4xl mx-auto">
-                      <div className="flex items-center justify-between mb-12">
+                      <div className="flex items-center justify-between mb-8 md:mb-12">
                         <div>
-                          <h2 className="text-4xl font-bold tracking-tight mb-2">My Task Center</h2>
-                          <p className="text-slate-400">Founder oversight and strategic priorities.</p>
+                          <h2 className="text-2xl md:text-4xl font-bold tracking-tight mb-2">My Task Center</h2>
+                          <p className="text-sm md:text-base text-slate-400">Founder oversight and strategic priorities.</p>
                         </div>
                         <button 
                           onClick={() => {
                             const text = prompt('Task description:');
                             if (text) setTodos([...todos, { id: Date.now().toString(), text, completed: false, priority: 'Medium', category: 'General' }]);
                           }}
-                          className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                         >
-                          <Plus className="w-6 h-6" />
+                          <Plus className="w-5 h-5 md:w-6 md:h-6" />
                         </button>
                       </div>
 
-                      <div className="space-y-8">
+                      <div className="space-y-6 md:space-y-8">
                         {['High', 'Medium', 'Low'].map(priority => (
-                          <div key={priority} className="space-y-4">
-                            <h3 className={`text-xs font-bold uppercase tracking-[0.2em] px-2 ${
+                          <div key={priority} className="space-y-3 md:space-y-4">
+                            <h3 className={`text-[9px] md:text-xs font-bold uppercase tracking-[0.2em] px-2 ${
                               priority === 'High' ? 'text-rose-400' : priority === 'Medium' ? 'text-amber-400' : 'text-indigo-400'
                             }`}>
                               {priority} Priority
                             </h3>
-                            <div className="space-y-3">
+                            <div className="space-y-2 md:space-y-3">
                               {todos.filter(t => t.priority === priority).map(todo => (
                                 <motion.div 
                                   key={todo.id}
                                   layout
-                                  className={`glass-card p-6 rounded-3xl flex items-center gap-6 group transition-all ${todo.completed ? 'opacity-50' : ''}`}
+                                  className={`glass-card p-4 md:p-6 rounded-2xl md:rounded-3xl flex items-center gap-3 md:gap-6 group transition-all border border-white/5 hover:border-white/10 ${todo.completed ? 'opacity-50' : ''}`}
                                 >
                                   <button 
                                     onClick={() => setTodos(todos.map(t => t.id === todo.id ? { ...t, completed: !t.completed } : t))}
-                                    className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                    className={`w-5 h-5 md:w-6 md:h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${
                                       todo.completed ? 'bg-indigo-600 border-indigo-600' : 'border-white/10 hover:border-indigo-500'
                                     }`}
                                   >
-                                    {todo.completed && <CheckSquare className="w-4 h-4 text-white" />}
+                                    {todo.completed && <CheckSquare className="w-3 h-3 md:w-4 md:h-4 text-white" />}
                                   </button>
-                                  <div className="flex-1">
-                                    <p className={`text-lg font-medium transition-all ${todo.completed ? 'line-through text-slate-500' : 'text-slate-100'}`}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm md:text-lg font-medium transition-all break-words ${todo.completed ? 'line-through text-slate-500' : 'text-slate-100 group-hover:text-indigo-300'}`}>
                                       {todo.text}
                                     </p>
                                     <div className="flex items-center gap-3 mt-1">
-                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 font-bold uppercase tracking-widest">{todo.category}</span>
+                                      <span className="text-[8px] md:text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500 font-bold uppercase tracking-widest">{todo.category}</span>
                                     </div>
                                   </div>
                                 </motion.div>
@@ -3323,36 +2716,39 @@ export default function App() {
                     key="global-activity"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 overflow-y-auto custom-scrollbar"
                   >
-                    <div className="max-w-5xl mx-auto">
-                      <div className="mb-12">
-                        <h2 className="text-3xl font-semibold mb-2">Platform Activity Monitor</h2>
-                        <p className="text-slate-400">Real-time audit log of all events across the agency.</p>
+                    <div className="max-w-5xl mx-auto w-full">
+                      <div className="mb-8 md:mb-12">
+                        <h2 className="text-2xl md:text-3xl font-semibold mb-2 tracking-tight">Platform Activity Monitor</h2>
+                        <p className="text-sm md:text-base text-slate-400">Real-time audit log of all events across the agency.</p>
                       </div>
 
-                      <div className="glass-card rounded-[32px] overflow-hidden">
-                        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
-                          <span className="text-sm font-medium">Global Event Stream</span>
+                      <div className="glass-card rounded-2xl md:rounded-[32px] overflow-hidden border border-white/5 shadow-2xl">
+                        <div className="p-4 md:p-8 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.01]">
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-sm font-medium">Global Event Stream</span>
+                          </div>
                           <div className="flex gap-2">
-                             <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Updates Enabled</div>
+                             <div className="px-3 py-1 bg-white/5 rounded-full text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-white/5">Live Updates Enabled</div>
                           </div>
                         </div>
                         <div className="divide-y divide-white/5">
                           {activityLogs.map(log => (
-                            <div key={log.id} className="p-6 flex items-center gap-6 hover:bg-white/[0.01] transition-colors">
-                              <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center shrink-0">
-                                <Activity className="w-5 h-5" />
+                            <div key={log.id} className="p-4 md:p-6 flex items-start md:items-center gap-4 md:gap-6 hover:bg-white/[0.02] transition-all group">
+                              <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-inner">
+                                <Activity className="w-5 h-5 md:w-6 md:h-6" />
                               </div>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-semibold">{log.userName}</span>
-                                  <span className="text-xs text-slate-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
+                                  <span className="font-bold text-xs md:text-base truncate group-hover:text-indigo-400 transition-colors">{log.userName}</span>
+                                  <span className="text-[9px] md:text-xs text-slate-500 font-medium">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  <p className="text-sm text-slate-300">{log.action}</p>
-                                  <span className="w-1 h-1 rounded-full bg-slate-600" />
-                                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">{log.module}</span>
+                                <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                  <p className="text-[11px] md:text-sm text-slate-300 break-words line-clamp-2 md:line-clamp-none flex-1">{log.action}</p>
+                                  <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                                  <span className="text-[8px] md:text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-400/10 px-2 py-0.5 rounded shrink-0">{log.module}</span>
                                 </div>
                               </div>
                             </div>
@@ -3363,72 +2759,15 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {portalView === 'global-settings' && (
-                  <motion.div
-                    key="global-settings"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="h-full w-full p-10 overflow-y-auto custom-scrollbar"
-                  >
-                    <div className="max-w-4xl mx-auto">
-                      <div className="mb-12">
-                        <h2 className="text-3xl font-semibold mb-2">Global System Settings</h2>
-                        <p className="text-slate-400">Platform-wide configurations and agency branding.</p>
-                      </div>
+                {portalView === 'global-settings' && <GlobalSettingsView />}
 
-                      <div className="space-y-6">
-                        <div className="glass-card p-8 rounded-[32px] space-y-6">
-                          <h3 className="text-lg font-medium">Agency Identity</h3>
-                          <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Agency Name</label>
-                              <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 transition-all font-light" defaultValue="Aqua Agency" />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Primary Color</label>
-                              <div className="flex gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-indigo-600 cursor-pointer border-2 border-white ring-offset-2 ring-offset-black" />
-                                <div className="w-12 h-12 rounded-xl bg-emerald-600 cursor-pointer border-2 border-transparent" />
-                                <div className="w-12 h-12 rounded-xl bg-rose-600 cursor-pointer border-2 border-transparent" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="glass-card p-8 rounded-[32px] space-y-6">
-                          <h3 className="text-lg font-medium">Security & Compliance</h3>
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5">
-                              <div>
-                                <p className="font-medium text-sm">Strict AI Monitoring</p>
-                                <p className="text-xs text-slate-500">Record all AI interactions for audit purposes.</p>
-                              </div>
-                              <div className="w-12 h-6 bg-indigo-600 rounded-full relative">
-                                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/5 opacity-50">
-                              <div>
-                                <p className="font-medium text-sm">Session Timeout</p>
-                                <p className="text-xs text-slate-500">Auto logout after 30 minutes of inactivity.</p>
-                              </div>
-                              <div className="w-12 h-6 bg-slate-700 rounded-full relative">
-                                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
 
                 {portalView === 'feature-request' && (
                   <motion.div
                     key="feature-request"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="h-full w-full p-10 flex flex-col items-center justify-center max-w-2xl mx-auto"
+                    className="h-full w-full p-4 md:p-6 lg:p-10 flex flex-col items-center justify-center max-w-2xl mx-auto"
                   >
                     <AnimatePresence mode="wait">
                       {!feedbackSubmitted ? (
@@ -3439,33 +2778,33 @@ export default function App() {
                           exit={{ opacity: 0, scale: 0.95 }}
                           className="w-full flex flex-col items-center"
                         >
-                          <div className="w-20 h-20 rounded-3xl bg-indigo-600/20 flex items-center justify-center mb-8">
-                            <Lightbulb className="w-10 h-10 text-indigo-400" />
+                          <div className="w-14 h-14 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-indigo-600/20 flex items-center justify-center mb-6 md:mb-8">
+                            <Lightbulb className="w-7 h-7 md:w-10 md:h-10 text-indigo-400" />
                           </div>
-                          <h2 className="text-4xl font-semibold mb-4 text-center">Submit a Feature</h2>
-                          <p className="text-slate-400 text-center mb-10">Help us shape the future of the portal. Share your ideas and suggestions with our product team.</p>
+                          <h2 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4 text-center tracking-tight">Submit a Feature</h2>
+                          <p className="text-xs md:text-base text-slate-400 text-center mb-8 md:mb-10 max-w-md">Help us shape the future of the portal. Share your ideas and suggestions with our product team.</p>
                           
-                          <div className="w-full space-y-6">
+                          <div className="w-full space-y-4 md:space-y-6">
                             <div className="space-y-2">
-                              <label className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Feature Title</label>
+                              <label className="text-[10px] md:text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Feature Title</label>
                               <input
                                 type="text"
                                 placeholder="e.g., Dark mode for editor"
-                                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 text-white"
+                                className="w-full px-4 py-3 md:py-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 text-sm md:text-base text-white"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Description</label>
+                              <label className="text-[10px] md:text-[11px] uppercase tracking-widest font-semibold text-slate-500 ml-1">Description</label>
                               <textarea
                                 rows={4}
                                 placeholder="Tell us more about how this feature would help you..."
-                                className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 resize-none text-white"
+                                className="w-full px-4 py-3 md:py-4 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-600 resize-none text-sm md:text-base text-white"
                               />
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                               <button 
                                 onClick={() => handleViewChange('support')}
-                                className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-xl font-semibold transition-all"
+                                className="w-full sm:flex-1 py-3 md:py-4 bg-white/5 hover:bg-white/10 rounded-xl font-semibold transition-all text-sm md:text-base"
                               >
                                 Cancel
                               </button>
@@ -3477,7 +2816,7 @@ export default function App() {
                                     handleViewChange('support');
                                   }, 3000);
                                 }}
-                                className="flex-2 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20"
+                                className="w-full sm:flex-2 py-3 md:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-indigo-600/20 text-sm md:text-base"
                               >
                                 Submit Proposal
                               </button>
@@ -3491,11 +2830,11 @@ export default function App() {
                           animate={{ opacity: 1, scale: 1 }}
                           className="text-center"
                         >
-                          <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-8 mx-auto">
-                            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6 md:mb-8 mx-auto">
+                            <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-emerald-400" />
                           </div>
-                          <h2 className="text-4xl font-semibold mb-4">Thank you!</h2>
-                          <p className="text-slate-400 max-w-sm mx-auto">Your feedback has been received. We'll review your request and get back to you as soon as possible.</p>
+                          <h2 className="text-2xl md:text-4xl font-semibold mb-3 md:mb-4">Thank you!</h2>
+                          <p className="text-sm md:text-base text-slate-400 max-w-sm mx-auto">Your feedback has been received. We'll review your request and get back to you as soon as possible.</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -3510,6 +2849,13 @@ export default function App() {
 
       {/* Add User Modal */}
       <AnimatePresence>
+        <EditClientModal
+          isOpen={showEditClientModal}
+          onClose={() => setShowEditClientModal(false)}
+          client={editingClient}
+          onSave={handleSaveClient}
+        />
+
         <AddClientModal 
           isOpen={showAddClientModal}
           onClose={() => setShowAddClientModal(false)}
@@ -3520,7 +2866,19 @@ export default function App() {
 
         <AddUserModal
           isOpen={showAddUserModal}
-          onClose={() => { setShowAddUserModal(false); setSelectedUserToEdit(null); }}
+          onClose={() => { 
+            setShowAddUserModal(false); 
+            setSelectedUserToEdit(null); 
+            setNewUser({
+              name: '',
+              email: '',
+              role: 'AgencyEmployee',
+              customRoleId: undefined,
+              permissions: ['dashboard'],
+              avatar: '',
+              clientId: undefined
+            });
+          }}
           selectedUserToEdit={selectedUserToEdit}
           newUser={newUser}
           setNewUser={setNewUser}
@@ -3580,6 +2938,7 @@ export default function App() {
               name: user.name,
               email: user.email,
               role: user.role,
+              customRoleId: user.customRoleId,
               permissions: user.permissions,
               avatar: user.avatar,
               clientId: user.clientId
@@ -3587,15 +2946,19 @@ export default function App() {
             setShowAddUserModal(true);
           }}
           onDeleteUser={handleDeleteUser}
-          onDeleteRole={(roleId) => {
-            setAgencies(prev => prev.map(a => 
-              a.id === activeAgencyId ? { ...a, roles: a.roles.filter(r => r.id !== roleId) } : a
-            ));
-            addLog('Role Deleted', `Role was removed`, 'action');
-          }}
+          onDeleteRole={handleDeleteRole}
           onExportData={handleExportData}
           onExportWebsite={handleExportWebsite}
           exporting={exporting}
+        />
+
+        <ConfirmationModal
+          isOpen={showConfirmationModal}
+          onClose={() => setShowConfirmationModal(false)}
+          onConfirm={confirmationConfig.onConfirm}
+          title={confirmationConfig.title}
+          message={confirmationConfig.message}
+          type={confirmationConfig.type}
         />
 
         <GlobalTasksModal
@@ -3623,7 +2986,9 @@ export default function App() {
           handleCreateRole={handleCreateRole}
         />
       </AnimatePresence>
+      <RoleSwitcher />
     </div>
     </AppProvider>
+    </InboxProvider>
   );
 }

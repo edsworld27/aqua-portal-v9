@@ -38,16 +38,16 @@ export function AppLauncherModal({ isOpen, onClose, handleViewChange, hasPermiss
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-4xl bg-slate-900 border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         >
-          <div className="flex items-center justify-between p-6 border-b border-white/10 bg-black/20">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 bg-black/20 sticky top-0 z-10 backdrop-blur-md">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                <LayoutGrid className="w-5 h-5 text-indigo-400" />
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
+                <LayoutGrid className="w-4 h-4 md:w-5 md:h-5 text-indigo-400" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">App Launcher</h2>
-                <p className="text-sm text-slate-400">Access your tools and workspaces</p>
+                <h2 className="text-lg md:text-xl font-semibold text-white">App Launcher</h2>
+                <p className="text-xs md:text-sm text-slate-400">Access your tools and workspaces</p>
               </div>
             </div>
             <button
@@ -58,8 +58,8 @@ export function AppLauncherModal({ isOpen, onClose, handleViewChange, hasPermiss
             </button>
           </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-4 md:p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {visibleApps.map((app) => (
                 <button
                   key={app.id}
@@ -67,13 +67,13 @@ export function AppLauncherModal({ isOpen, onClose, handleViewChange, hasPermiss
                     handleViewChange(app.id);
                     onClose();
                   }}
-                  className="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-indigo-500/50 hover:bg-white/10 transition-all text-left group flex flex-col items-start"
+                  className="p-4 md:p-6 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 hover:border-indigo-500/50 hover:bg-white/10 transition-all text-left group flex flex-col items-start"
                 >
-                  <div className={`w-12 h-12 rounded-xl ${app.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                    <app.icon className={`w-6 h-6 ${app.color}`} />
+                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl ${app.bg} flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform shrink-0`}>
+                    <app.icon className={`w-5 h-5 md:w-6 md:h-6 ${app.color}`} />
                   </div>
-                  <h3 className="text-lg font-medium text-white mb-2">{app.title}</h3>
-                  <p className="text-sm text-slate-400 line-clamp-2">{app.description}</p>
+                  <h3 className="text-base md:text-lg font-medium text-white mb-1 md:mb-2">{app.title}</h3>
+                  <p className="text-xs md:text-sm text-slate-400 line-clamp-2">{app.description}</p>
                 </button>
               ))}
             </div>

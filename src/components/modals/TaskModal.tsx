@@ -37,15 +37,15 @@ export function TaskModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-xl glass-card rounded-[2.5rem] p-10 overflow-hidden"
+        className="relative w-full max-w-xl glass-card rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
-            <h3 className="text-2xl font-semibold">Create Operational Task</h3>
-            <p className="text-sm text-slate-500">Assign a new action item to the board.</p>
+            <h3 className="text-xl md:text-2xl font-semibold">Create Operational Task</h3>
+            <p className="text-xs md:text-sm text-slate-500">Assign a new action item to the board.</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-            <XCircle className="w-6 h-6 text-slate-500" />
+            <XCircle className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
           </button>
         </div>
 
@@ -61,7 +61,7 @@ export function TaskModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Project</label>
               <select 
@@ -97,9 +97,9 @@ export function TaskModal({
             </select>
           </div>
 
-          <div className="flex gap-4 pt-4">
-            <button onClick={onClose} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-bold">Cancel</button>
-            <button onClick={handleAddTask} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl font-bold text-white shadow-lg shadow-indigo-600/20">Publish Task</button>
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pt-4">
+            <button onClick={onClose} className="w-full sm:flex-1 py-3 md:py-4 bg-white/5 hover:bg-white/10 rounded-xl md:rounded-2xl font-bold text-sm md:text-base">Cancel</button>
+            <button onClick={handleAddTask} className="w-full sm:flex-1 py-3 md:py-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl md:rounded-2xl font-bold text-white shadow-lg shadow-indigo-600/20 text-sm md:text-base">Publish Task</button>
           </div>
         </div>
       </motion.div>

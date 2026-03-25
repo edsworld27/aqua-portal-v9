@@ -65,77 +65,77 @@ export const PageBuilder: React.FC = () => {
 
   if (editingPage) {
     return (
-      <div className="glass-card p-8 rounded-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-semibold flex items-center gap-3">
-            <Layout className="w-6 h-6 text-indigo-400" />
+      <div className="glass-card p-5 md:p-8 rounded-2xl md:rounded-3xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-semibold flex items-center gap-3">
+            <Layout className="w-5 h-5 md:w-6 md:h-6 text-indigo-400" />
             Edit Page: {editingPage.title}
           </h2>
           <div className="flex gap-3">
-            <button onClick={() => setEditingPage(null)} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+            <button onClick={() => setEditingPage(null)} className="flex-1 md:flex-none px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-xs md:text-sm">
               Cancel
             </button>
-            <button onClick={handleSavePage} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center gap-2">
-              <Save className="w-4 h-4" />
+            <button onClick={handleSavePage} className="flex-1 md:flex-none px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs md:text-sm">
+              <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
               Save Page
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
           <div>
-            <label className="text-xs uppercase tracking-widest text-slate-500 mb-2 block">Page Title</label>
+            <label className="text-[10px] md:text-xs uppercase tracking-widest text-slate-500 mb-2 block">Page Title</label>
             <input 
               type="text" 
               value={editingPage.title}
               onChange={e => setEditingPage({...editingPage, title: e.target.value})}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-2.5 md:p-3 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500"
             />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-widest text-slate-500 mb-2 block">Slug (URL Path)</label>
+            <label className="text-[10px] md:text-xs uppercase tracking-widest text-slate-500 mb-2 block">Slug (URL Path)</label>
             <input 
               type="text" 
               value={editingPage.slug}
               onChange={e => setEditingPage({...editingPage, slug: e.target.value})}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-900/50 border border-white/10 rounded-xl p-2.5 md:p-3 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500"
             />
           </div>
         </div>
 
-        <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-lg font-medium">Widgets</h3>
-          <button onClick={handleAddWidget} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-sm flex items-center gap-2 transition-colors">
-            <Plus className="w-4 h-4" />
+        <div className="mb-5 md:mb-6 flex items-center justify-between">
+          <h3 className="text-base md:text-lg font-medium">Widgets</h3>
+          <button onClick={handleAddWidget} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs md:text-sm flex items-center gap-2 transition-colors">
+            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
             Add Widget
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {editingPage.widgets.length === 0 ? (
-            <div className="text-center py-8 text-slate-500 border border-dashed border-white/10 rounded-2xl">
+            <div className="text-center py-8 text-slate-500 border border-dashed border-white/10 rounded-xl md:rounded-2xl text-sm">
               No widgets added yet.
             </div>
           ) : (
             editingPage.widgets.map(widget => (
-              <div key={widget.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex gap-4 items-start">
-                <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div key={widget.id} className="p-4 bg-white/5 border border-white/5 rounded-xl md:rounded-2xl flex flex-col sm:flex-row gap-4 items-start relative">
+                <div className="flex-1 w-full space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Title</label>
+                      <label className="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Title</label>
                       <input 
                         type="text" 
                         value={widget.title}
                         onChange={e => handleUpdateWidget(widget.id, { title: e.target.value })}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Type</label>
+                      <label className="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Type</label>
                       <select 
                         value={widget.type}
                         onChange={e => handleUpdateWidget(widget.id, { type: e.target.value as WidgetType })}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500"
                       >
                         <option value="metric">Metric Card</option>
                         <option value="chart">Chart</option>
@@ -143,12 +143,12 @@ export const PageBuilder: React.FC = () => {
                         <option value="text">Text Block</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Size</label>
+                    <div className="sm:col-span-2 lg:col-span-1">
+                      <label className="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Size</label>
                       <select 
                         value={widget.size}
                         onChange={e => handleUpdateWidget(widget.id, { size: e.target.value as any })}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500"
                       >
                         <option value="small">Small (1/4)</option>
                         <option value="medium">Medium (1/2)</option>
@@ -159,18 +159,21 @@ export const PageBuilder: React.FC = () => {
                   </div>
                   {widget.type === 'text' && (
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Content</label>
+                      <label className="text-[9px] md:text-[10px] uppercase tracking-widest text-slate-500 mb-1 block">Content</label>
                       <textarea
                         value={widget.content || ''}
                         onChange={e => handleUpdateWidget(widget.id, { content: e.target.value })}
                         rows={3}
-                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
+                        className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-2 text-xs md:text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
                         placeholder="Enter text content here..."
                       />
                     </div>
                   )}
                 </div>
-                <button onClick={() => handleRemoveWidget(widget.id)} className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors mt-5">
+                <button 
+                  onClick={() => handleRemoveWidget(widget.id)} 
+                  className="absolute top-2 right-2 sm:static p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors sm:mt-5"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -182,36 +185,36 @@ export const PageBuilder: React.FC = () => {
   }
 
   return (
-    <div className="glass-card p-8 rounded-3xl">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-semibold flex items-center gap-3">
-          <Layout className="w-6 h-6 text-indigo-400" />
+    <div className="glass-card p-5 md:p-8 rounded-2xl md:rounded-3xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 md:mb-8">
+        <h2 className="text-xl md:text-2xl font-semibold flex items-center gap-3">
+          <Layout className="w-5 h-5 md:w-6 md:h-6 text-indigo-400" />
           Custom Pages
         </h2>
-        <button onClick={handleCreatePage} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center gap-2">
-          <Plus className="w-4 h-4" />
+        <button onClick={handleCreatePage} className="w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors flex items-center justify-center gap-2 text-xs md:text-sm">
+          <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
           Create Page
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {customPages.length === 0 ? (
-          <div className="text-center py-10 text-slate-500 border border-dashed border-white/10 rounded-2xl">
+          <div className="text-center py-10 text-slate-500 border border-dashed border-white/10 rounded-xl md:rounded-2xl text-sm">
             No custom pages created yet. Build your first dashboard!
           </div>
         ) : (
           customPages.map(page => (
-            <div key={page.id} className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-              <div>
-                <div className="font-medium text-white">{page.title}</div>
-                <div className="text-xs text-slate-500">/{page.slug} • {page.widgets.length} Widgets</div>
+            <div key={page.id} className="flex items-center justify-between p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+              <div className="min-w-0">
+                <div className="font-medium text-white text-sm md:text-base truncate">{page.title}</div>
+                <div className="text-[10px] md:text-xs text-slate-500 truncate">/{page.slug} • {page.widgets.length} Widgets</div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2 shrink-0">
                 <button onClick={() => setEditingPage(page)} className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 <button onClick={() => handleDeletePage(page.id)} className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
               </div>
             </div>

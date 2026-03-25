@@ -11,7 +11,7 @@ export type PortalView = 'dashboard' | 'crm' | 'website' | 'resources' | 'settin
   | 'agency-clients'
   | 'project-hub'
   | 'task-board'
-  | 'notifications' | 'discover' | 'updates' | 'aqua-ai' | 'workspaces' | 'company' | 'data-hub' | 'admin-dashboard' | 'client-management' | 'onboarding' | 'collaboration' | 'discovery-form' | 'logs' | 'design-dashboard' | 'dev-dashboard' | 'onboarding-dashboard' | 'discovery-dashboard' | 'employee-management' | 'employee-profile' | 'agency-builder' | 'apps';
+  | 'notifications' | 'discover' | 'updates' | 'aqua-ai' | 'workspaces' | 'company' | 'data-hub' | 'admin-dashboard' | 'client-management' | 'onboarding' | 'collaboration' | 'discovery-form' | 'logs' | 'design-dashboard' | 'dev-dashboard' | 'onboarding-dashboard' | 'discovery-dashboard' | 'employee-management' | 'employee-profile' | 'agency-builder' | 'apps' | 'agency-configurator';
 
 export type WidgetType = 'metric' | 'chart' | 'list' | 'text';
 
@@ -173,4 +173,25 @@ export interface ProjectTask {
   steps: SubStep[];
   attachments: TaskAttachment[];
   createdAt: string;
+}
+
+export interface SidebarItem {
+  id: string;
+  label: string;
+  iconName: string;
+  view: PortalView | string;
+}
+
+export interface SidebarSection {
+  section: string;
+  items: SidebarItem[];
+}
+
+export interface ClientStageConfig {
+  stage: ClientStage;
+  sections: SidebarSection[];
+}
+
+export interface SidebarConfigurator {
+  stages: ClientStageConfig[];
 }

@@ -50,15 +50,15 @@ export function TicketModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass-card w-full max-w-lg p-10 rounded-[40px] shadow-2xl overflow-hidden"
+        className="glass-card w-full max-w-lg p-6 md:p-10 rounded-2xl md:rounded-[40px] shadow-2xl overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
-            <h3 className="text-2xl font-semibold mb-1">Create Support Ticket</h3>
-            <p className="text-slate-400 text-sm italic">New ticket as {userProfile.name}</p>
+            <h3 className="text-xl md:text-2xl font-semibold mb-1">Create Support Ticket</h3>
+            <p className="text-slate-400 text-xs md:text-sm italic">New ticket as {userProfile.name}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-all">
-            <XCircle className="w-6 h-6" />
+            <XCircle className="w-5 h-5 md:w-6 md:h-6" />
           </button>
         </div>
 
@@ -74,7 +74,7 @@ export function TicketModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Priority</label>
               <select 
@@ -100,16 +100,16 @@ export function TicketModal({
             </div>
           </div>
 
-          <div className="pt-4 flex gap-4">
+          <div className="pt-4 flex flex-col sm:flex-row gap-3 md:gap-4">
             <button 
               onClick={onClose}
-              className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl font-bold transition-all text-slate-400"
+              className="w-full sm:flex-1 py-3 md:py-4 bg-white/5 hover:bg-white/10 rounded-xl md:rounded-2xl font-bold transition-all text-slate-400 text-sm md:text-base"
             >
               Cancel
             </button>
             <button 
               onClick={handleCreateTicket}
-              className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98]"
+              className="w-full sm:flex-1 py-3 md:py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl md:rounded-2xl transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.98] text-sm md:text-base"
             >
               Create Ticket
             </button>
