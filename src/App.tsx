@@ -133,7 +133,7 @@ import { DesignDashboardView } from './components/views/DesignDashboardView/Desi
 import { DevDashboardView } from './components/views/DevDashboardView/DevDashboardView';
 import OnboardingDashboardView from './components/views/OnboardingDashboardView/OnboardingDashboardView';
 import DiscoveryDashboardView from './components/views/DiscoveryDashboardView/DiscoveryDashboardView';
-import OnboardingView from './components/views/OnboardingView';
+import OnboardingView from './components/views/OnboardingView/OnboardingView';
 import CollaborationView from './components/views/CollaborationView/CollaborationView';
 import { AgencyBuilderView } from './components/views/AgencyBuilderView';
 import { CustomPageView } from './components/views/CustomPageView';
