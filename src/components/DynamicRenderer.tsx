@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardWidget } from './shared/DashboardWidget';
 import AIChatbot from './AIChatbot';
-import { SidebarItem } from './SidebarItem';
+import { SidebarItem } from './shared/SidebarItem';
 import { DesignConcepts } from './collaboration/DesignConcepts';
 import { ProjectTimeline } from './collaboration/ProjectTimeline';
 import { ProjectChat } from './collaboration/ProjectChat';

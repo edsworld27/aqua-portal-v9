@@ -112,7 +112,7 @@ import { MasterConfig, initialMasterConfig } from './config/masterConfig';
 import { AppProvider } from './context/AppContext';
 import { InboxProvider } from './context/InboxContext';
 import { useModalContext } from './context/ModalContext';
-import { SidebarItem } from './components/SidebarItem';
+import { SidebarItem } from './components/shared/SidebarItem';
 import { DashboardWidget } from './components/shared/DashboardWidget';
 import { InboxView } from './components/views/InboxView';
 import { AgencyClientsView } from './views/AgencyClientsView';
