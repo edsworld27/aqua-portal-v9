@@ -114,7 +114,7 @@ import { InboxProvider } from './context/InboxContext';
 import { useModalContext } from './context/ModalContext';
 import { SidebarItem } from './components/shared/SidebarItem';
 import { DashboardWidget } from './components/shared/DashboardWidget';
-import { InboxView } from './components/views/InboxView';
+import { InboxView } from './components/views/InboxView/InboxView';
 import { AgencyClientsView } from './views/AgencyClientsView';
 import { AgencyConfiguratorView } from './views/AgencyConfiguratorView';
 import { RoleSwitcher } from './components/shared/RoleSwitcher';
@@ -128,7 +128,7 @@ import { TaskModal } from './components/modals/TaskModal';
 import { TicketModal } from './components/modals/TicketModal';
 
 import { SupportView } from './components/views/SupportView/SupportView';
-import { DataHubView } from './components/views/DataHubView';
+import { DataHubView } from './components/views/DataHubView/DataHubView';
 import { DesignDashboardView } from './components/views/DesignDashboardView/DesignDashboardView';
 import { DevDashboardView } from './components/views/DevDashboardView/DevDashboardView';
 import OnboardingDashboardView from './components/views/OnboardingDashboardView/OnboardingDashboardView';
