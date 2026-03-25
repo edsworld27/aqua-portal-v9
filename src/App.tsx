@@ -130,7 +130,7 @@ import { TicketModal } from './components/modals/TicketModal';
 import { SupportView } from './components/views/SupportView';
 import { DataHubView } from './components/views/DataHubView';
 import { DesignDashboardView } from './components/views/DesignDashboardView/DesignDashboardView';
-import { DevDashboardView } from './components/views/DevDashboardView';
+import { DevDashboardView } from './components/views/DevDashboardView/DevDashboardView';
 import OnboardingDashboardView from './components/views/OnboardingDashboardView';
 import DiscoveryDashboardView from './components/views/DiscoveryDashboardView/DiscoveryDashboardView';
 import OnboardingView from './components/views/OnboardingView';
