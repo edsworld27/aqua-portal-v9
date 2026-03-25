@@ -1,5 +1,6 @@
 import React from 'react';
-import { ClientStage } from '../types';
+import { ClientStage } from '../../../types';
+import { stageDropdownUI as ui } from './ui';
 
 interface StageDropdownProps {
   currentStage: ClientStage;
@@ -13,11 +14,11 @@ export const StageDropdown: React.FC<StageDropdownProps> = ({ currentStage, onUp
     <select
       value={currentStage}
       onChange={(e) => onUpdate(e.target.value as ClientStage)}
-      className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[9px] md:text-xs text-slate-300 uppercase tracking-widest font-bold focus:outline-none focus:border-indigo-500/50 transition-colors"
+      className={`${ui.select.bg} ${ui.select.border} ${ui.select.radius} ${ui.select.paddingX} ${ui.select.paddingY} ${ui.select.fontSize} ${ui.select.textColor} ${ui.select.transform} ${ui.select.tracking} ${ui.select.fontWeight} ${ui.select.focus} ${ui.select.transition}`}
     >
       {stages.map((stage) => (
-        <option key={stage} value={stage} className="bg-slate-900 text-white">
-          {stage.charAt(0).toUpperCase() + stage.slice(1)}
+        <option key={stage} value={stage} className={`${ui.option.bg} ${ui.option.textColor}`}>
+          {ui.stageLabels[stage]}
         </option>
       ))}
     </select>
