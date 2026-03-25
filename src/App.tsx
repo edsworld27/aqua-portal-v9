@@ -113,7 +113,7 @@ import { AppProvider } from './context/AppContext';
 import { InboxProvider } from './context/InboxContext';
 import { useModalContext } from './context/ModalContext';
 import { SidebarItem } from './components/SidebarItem';
-import { DashboardWidget } from './components/DashboardWidget';
+import { DashboardWidget } from './components/shared/DashboardWidget';
 import { InboxView } from './components/views/InboxView';
 import { AgencyClientsView } from './views/AgencyClientsView';
 import { AgencyConfiguratorView } from './views/AgencyConfiguratorView';

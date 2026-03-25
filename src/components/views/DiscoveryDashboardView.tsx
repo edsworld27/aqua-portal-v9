@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Compass, Lightbulb, Target, Clock } from 'lucide-react';
-import { DashboardWidget } from '../DashboardWidget';
+import { DashboardWidget } from '../shared/DashboardWidget';
 
 const DiscoveryDashboardView: React.FC = () => {
   return (

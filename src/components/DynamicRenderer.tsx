@@ -1,5 +1,5 @@
 import React from 'react';
-import { DashboardWidget } from './DashboardWidget';
+import { DashboardWidget } from './shared/DashboardWidget';
 import AIChatbot from './AIChatbot';
 import { SidebarItem } from './SidebarItem';
 import { DesignConcepts } from './collaboration/DesignConcepts';
