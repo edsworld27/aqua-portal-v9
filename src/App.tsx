@@ -127,7 +127,7 @@ import { TaskDetailModal } from './components/modals/TaskDetailModal';
 import { TaskModal } from './components/modals/TaskModal';
 import { TicketModal } from './components/modals/TicketModal';
 
-import { SupportView } from './components/views/SupportView';
+import { SupportView } from './components/views/SupportView/SupportView';
 import { DataHubView } from './components/views/DataHubView';
 import { DesignDashboardView } from './components/views/DesignDashboardView/DesignDashboardView';
 import { DevDashboardView } from './components/views/DevDashboardView/DevDashboardView';
