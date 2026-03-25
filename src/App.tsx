@@ -134,7 +134,7 @@ import { DevDashboardView } from './components/views/DevDashboardView/DevDashboa
 import OnboardingDashboardView from './components/views/OnboardingDashboardView/OnboardingDashboardView';
 import DiscoveryDashboardView from './components/views/DiscoveryDashboardView/DiscoveryDashboardView';
 import OnboardingView from './components/views/OnboardingView';
-import CollaborationView from './components/views/CollaborationView';
+import CollaborationView from './components/views/CollaborationView/CollaborationView';
 import { AgencyBuilderView } from './components/views/AgencyBuilderView';
 import { CustomPageView } from './components/views/CustomPageView';
 import { EmployeeManagementView } from './components/views/EmployeeManagementView';
