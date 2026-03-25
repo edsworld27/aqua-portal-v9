@@ -131,7 +131,7 @@ import { SupportView } from './components/views/SupportView';
 import { DataHubView } from './components/views/DataHubView';
 import { DesignDashboardView } from './components/views/DesignDashboardView/DesignDashboardView';
 import { DevDashboardView } from './components/views/DevDashboardView/DevDashboardView';
-import OnboardingDashboardView from './components/views/OnboardingDashboardView';
+import OnboardingDashboardView from './components/views/OnboardingDashboardView/OnboardingDashboardView';
 import DiscoveryDashboardView from './components/views/DiscoveryDashboardView/DiscoveryDashboardView';
 import OnboardingView from './components/views/OnboardingView';
 import CollaborationView from './components/views/CollaborationView';
