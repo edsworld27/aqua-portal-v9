@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { useAppContext } from '../../context/AppContext';
-import { DashboardWidget } from '../DashboardWidget';
+import { DashboardWidget } from '../shared/DashboardWidget';
 import { Users, Activity, BarChart, FileText } from 'lucide-react';
 import { 
   AreaChart, 

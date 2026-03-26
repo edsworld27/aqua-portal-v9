@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { PlusCircle, Building2, Edit2 } from 'lucide-react';
-import { StageDropdown } from '../components/StageDropdown';
+import { StageDropdown } from '../components/shared/StageDropdown';
 import { ClientStage } from '../types';
 
 interface AgencyClientsViewProps {

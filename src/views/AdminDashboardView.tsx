@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Plus, CreditCard, Users, Zap, ShieldCheck, Briefcase, Clock, MessageSquare, CheckCircle2, Star } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { DashboardWidget } from '../components/DashboardWidget';
+import { DashboardWidget } from '../components/shared/DashboardWidget';
 
 export const AdminDashboardView: React.FC = () => {
   const { currentUser, isAgencyAdmin, clients, users, setShowAddClientModal } = useAppContext();
